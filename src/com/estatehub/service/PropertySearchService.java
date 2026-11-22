@@ -1,3 +1,4 @@
+
 package com.estatehub.service;
 
 import com.estatehub.model.*;
@@ -66,6 +67,52 @@ public class PropertySearchService {
 
         for (Property p : propertyService.getAllProperties()) {
             if (p.getPrice() >= min && p.getPrice() <= max) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    public List<Property> filterByBedrooms(int bedrooms) {
+        List<Property> result = new ArrayList<>();
+
+        for (Property p : propertyService.getAllProperties()) {
+            if (p.getBedrooms() == bedrooms) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    public List<Property> filterByBathrooms(int bathrooms) {
+        List<Property> result = new ArrayList<>();
+
+        for (Property p : propertyService.getAllProperties()) {
+            if (p.getBathrooms() == bathrooms) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    public List<Property> filterByFurnishingStatus(
+            FurnishingStatus furnishingStatus) {
+
+        List<Property> result = new ArrayList<>();
+
+        for (Property p : propertyService.getAllProperties()) {
+            if (p.getFurnishingStatus() == furnishingStatus) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    public List<Property> filterByListingStatus(ListingStatus listingStatus) {
+        List<Property> result = new ArrayList<>();
+
+        for (Property p : propertyService.getAllProperties()) {
+            if (p.getListingStatus() == listingStatus) {
                 result.add(p);
             }
         }

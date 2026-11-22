@@ -232,54 +232,98 @@ public class Main {
         displayProperties(searchService.searchByLocality(locality));
     }
 
-    // FILTER PROPERTIES
+private static void filterProperties() {
 
-    private static void filterProperties() {
+    System.out.println("\n--- FILTER PROPERTIES ---");
+    System.out.println("1. Filter by Purpose");
+    System.out.println("2. Filter by Type");
+    System.out.println("3. Filter by Price Range");
+    System.out.println("4. Filter by Bedrooms");
+    System.out.println("5. Filter by Bathrooms");
+    System.out.println("6. Filter by Furnishing Status");
+    System.out.println("7. Filter by Listing Status");
 
-        System.out.println("\n--- FILTER PROPERTIES ---");
-        System.out.println("1. Filter by Purpose");
-        System.out.println("2. Filter by Type");
-        System.out.println("3. Filter by Price Range");
+    System.out.print("Enter choice: ");
+    int choice = readInt();
 
-        System.out.print("Enter choice: ");
-        int choice = readInt();
+    switch (choice) {
 
-        switch (choice) {
+        case 1:
+            PropertyPurpose purpose =
+                    readEnum(PropertyPurpose.class,
+                            "Enter purpose (BUY/RENT): ");
 
-            case 1:
-                PropertyPurpose purpose =
-                        readEnum(PropertyPurpose.class,
-                                "Enter purpose (BUY/RENT): ");
+            displayProperties(searchService.filterByPurpose(purpose));
+            break;
 
-                displayProperties(searchService.filterByPurpose(purpose));
+        case 2:
+            PropertyType type =
+                    readEnum(PropertyType.class, "Enter type: ");
+
+            displayProperties(searchService.filterByType(type));
+            break;
+
+        case 3:
+            System.out.print("Enter minimum price: ");
+            double min = readDouble();
+
+            System.out.print("Enter maximum price: ");
+            double max = readDouble();
+
+            if (min < 0 || max < min) {
+                System.out.println("Invalid price range.");
                 break;
+            }
 
-            case 2:
-                PropertyType type =
-                        readEnum(PropertyType.class, "Enter type: ");
+            displayProperties(searchService.filterByPrice(min, max));
+            break;
 
-                displayProperties(searchService.filterByType(type));
+        case 4:
+            System.out.print("Enter number of bedrooms: ");
+            int bedrooms = readInt();
+
+            if (bedrooms < 0) {
+                System.out.println("Bedrooms cannot be negative.");
                 break;
+            }
 
-            case 3:
-                System.out.print("Enter minimum price: ");
-                double min = readDouble();
+            displayProperties(searchService.filterByBedrooms(bedrooms));
+            break;
 
-                System.out.print("Enter maximum price: ");
-                double max = readDouble();
+        case 5:
+            System.out.print("Enter number of bathrooms: ");
+            int bathrooms = readInt();
 
-                if (min < 0 || max < min) {
-                    System.out.println("Invalid price range.");
-                    break;
-                }
-
-                displayProperties(searchService.filterByPrice(min, max));
+            if (bathrooms < 0) {
+                System.out.println("Bathrooms cannot be negative.");
                 break;
+            }
 
-            default:
-                System.out.println("Invalid filter choice.");
-        }
+            displayProperties(searchService.filterByBathrooms(bathrooms));
+            break;
+
+        case 6:
+            FurnishingStatus furnishing =
+                    readEnum(FurnishingStatus.class,
+                            "Enter furnishing status (FURNISHED/SEMI_FURNISHED/UNFURNISHED): ");
+
+            displayProperties(
+                    searchService.filterByFurnishingStatus(furnishing));
+            break;
+
+        case 7:
+            ListingStatus status =
+                    readEnum(ListingStatus.class,
+                            "Enter listing status (PENDING/APPROVED/REJECTED/SOLD/RENTED): ");
+
+            displayProperties(
+                    searchService.filterByListingStatus(status));
+            break;
+
+        default:
+            System.out.println("Invalid filter choice.");
     }
+}
 
     // SORT PROPERTIES
 
