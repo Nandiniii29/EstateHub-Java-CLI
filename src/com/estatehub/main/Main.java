@@ -15,8 +15,8 @@ public class Main {
 
     private static Scanner sc = new Scanner(System.in);
 
-    private static PropertyRepository repository =
-            new InMemoryPropertyRepository();
+  private static PropertyRepository repository =
+        new MySQLPropertyRepository();
 
     private static PropertyService propertyService =
             new PropertyService(repository);
