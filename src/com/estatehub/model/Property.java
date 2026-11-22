@@ -1,3 +1,5 @@
+
+
 package com.estatehub.model;
 
 public class Property {
@@ -54,9 +56,7 @@ public class Property {
     public int getBedrooms() { return bedrooms; }
     public int getBathrooms() { return bathrooms; }
     public double getArea() { return area; }
-    public FurnishingStatus getFurnishingStatus() {
-        return furnishingStatus;
-    }
+    public FurnishingStatus getFurnishingStatus() { return furnishingStatus; }
     public String getDescription() { return description; }
     public ListingStatus getListingStatus() { return listingStatus; }
     public int getOwnerId() { return ownerId; }
@@ -71,29 +71,30 @@ public class Property {
     public void setBedrooms(int bedrooms) { this.bedrooms = bedrooms; }
     public void setBathrooms(int bathrooms) { this.bathrooms = bathrooms; }
     public void setArea(double area) { this.area = area; }
-    public void setFurnishingStatus(FurnishingStatus status) {
-        this.furnishingStatus = status;
+    public void setFurnishingStatus(FurnishingStatus furnishingStatus) {
+        this.furnishingStatus = furnishingStatus;
     }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public void setListingStatus(ListingStatus status) {
-        this.listingStatus = status;
+    public void setDescription(String description) { this.description = description; }
+    public void setListingStatus(ListingStatus listingStatus) {
+        this.listingStatus = listingStatus;
     }
 
     @Override
     public String toString() {
-        return "Property ID: " + propertyId +
+        return "\nProperty ID: " + propertyId +
                 "\nTitle: " + title +
                 "\nPurpose: " + purpose +
                 "\nType: " + type +
                 "\nCity: " + city +
                 "\nLocality: " + locality +
+                "\nAddress: " + address +
                 "\nPrice: " + price +
                 "\nBedrooms: " + bedrooms +
                 "\nBathrooms: " + bathrooms +
                 "\nArea: " + area +
                 "\nFurnishing: " + furnishingStatus +
-                "\nStatus: " + listingStatus;
+                "\nDescription: " + description +
+                "\nListing Status: " + listingStatus +
+                "\nOwner ID: " + ownerId;
     }
 }
