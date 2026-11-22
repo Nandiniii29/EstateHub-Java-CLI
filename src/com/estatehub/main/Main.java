@@ -41,6 +41,7 @@ public class Main {
             System.out.println("7. Sort Properties");
             System.out.println("8. Delete Property");
             System.out.println("9. EMI Calculator");
+            System.out.println("10. Update Property");
             System.out.println("0. Exit");
             System.out.println("==============================================");
 
@@ -83,6 +84,10 @@ public class Main {
 
                 case 9:
                     calculateEMI();
+                    break;
+
+                case 10:
+                    updateProperty();
                     break;
 
                 case 0:
@@ -148,20 +153,9 @@ public class Main {
             int ownerId = readInt();
 
             Property property = new Property(
-                    id,
-                    title,
-                    purpose,
-                    type,
-                    city,
-                    locality,
-                    address,
-                    price,
-                    bedrooms,
-                    bathrooms,
-                    area,
-                    furnishing,
-                    description,
-                    ListingStatus.PENDING,
+                    id, title, purpose, type, city, locality,
+                    address, price, bedrooms, bathrooms, area,
+                    furnishing, description, ListingStatus.PENDING,
                     ownerId
             );
 
@@ -225,9 +219,7 @@ public class Main {
         System.out.print("Enter city name: ");
         String city = sc.nextLine();
 
-        List<Property> result = searchService.searchByCity(city);
-
-        displayProperties(result);
+        displayProperties(searchService.searchByCity(city));
     }
 
     // SEARCH BY LOCALITY
@@ -237,10 +229,7 @@ public class Main {
         System.out.print("Enter locality: ");
         String locality = sc.nextLine();
 
-        List<Property> result =
-                searchService.searchByLocality(locality);
-
-        displayProperties(result);
+        displayProperties(searchService.searchByLocality(locality));
     }
 
     // FILTER PROPERTIES
@@ -267,8 +256,7 @@ public class Main {
 
             case 2:
                 PropertyType type =
-                        readEnum(PropertyType.class,
-                                "Enter type: ");
+                        readEnum(PropertyType.class, "Enter type: ");
 
                 displayProperties(searchService.filterByType(type));
                 break;
@@ -338,6 +326,131 @@ public class Main {
 
         } catch (InvalidPropertyException e) {
             System.out.println("Invalid input: " + e.getMessage());
+        }
+    }
+
+    // UPDATE PROPERTY
+
+    private static void updateProperty() {
+
+        try {
+            System.out.println("\n--- UPDATE PROPERTY ---");
+
+            System.out.print("Enter property ID to update: ");
+            int id = readInt();
+
+            Property property = propertyService.getPropertyById(id);
+
+            System.out.println("\nCurrent property details:");
+            System.out.println(property);
+
+            int choice;
+
+            do {
+                System.out.println("\n--- SELECT FIELD TO UPDATE ---");
+                System.out.println("1. Title");
+                System.out.println("2. Purpose");
+                System.out.println("3. Property Type");
+                System.out.println("4. City");
+                System.out.println("5. Locality");
+                System.out.println("6. Address");
+                System.out.println("7. Price");
+                System.out.println("8. Bedrooms");
+                System.out.println("9. Bathrooms");
+                System.out.println("10. Area");
+                System.out.println("11. Furnishing Status");
+                System.out.println("12. Description");
+                System.out.println("0. Save and Exit");
+
+                System.out.print("Enter your choice: ");
+                choice = readInt();
+
+                switch (choice) {
+
+                    case 1:
+                        System.out.print("Enter new title: ");
+                        property.setTitle(sc.nextLine());
+                        break;
+
+                    case 2:
+                        property.setPurpose(
+                                readEnum(PropertyPurpose.class,
+                                        "Enter new purpose (BUY/RENT): ")
+                        );
+                        break;
+
+                    case 3:
+                        property.setType(
+                                readEnum(PropertyType.class,
+                                        "Enter new property type: ")
+                        );
+                        break;
+
+                    case 4:
+                        System.out.print("Enter new city: ");
+                        property.setCity(sc.nextLine());
+                        break;
+
+                    case 5:
+                        System.out.print("Enter new locality: ");
+                        property.setLocality(sc.nextLine());
+                        break;
+
+                    case 6:
+                        System.out.print("Enter new address: ");
+                        property.setAddress(sc.nextLine());
+                        break;
+
+                    case 7:
+                        System.out.print("Enter new price: ");
+                        property.setPrice(readDouble());
+                        break;
+
+                    case 8:
+                        System.out.print("Enter new number of bedrooms: ");
+                        property.setBedrooms(readInt());
+                        break;
+
+                    case 9:
+                        System.out.print("Enter new number of bathrooms: ");
+                        property.setBathrooms(readInt());
+                        break;
+
+                    case 10:
+                        System.out.print("Enter new area: ");
+                        property.setArea(readDouble());
+                        break;
+
+                    case 11:
+                        property.setFurnishingStatus(
+                                readEnum(FurnishingStatus.class,
+                                        "Enter furnishing status: ")
+                        );
+                        break;
+
+                    case 12:
+                        System.out.print("Enter new description: ");
+                        property.setDescription(sc.nextLine());
+                        break;
+
+                    case 0:
+                        propertyService.updateProperty(property);
+                        System.out.println("Property updated successfully!");
+                        System.out.println("\nUpdated details:");
+                        System.out.println(property);
+                        break;
+
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+
+            } while (choice != 0);
+
+        } catch (PropertyNotFoundException e) {
+            System.out.println("Error: " + e.getMessage());
+
+        } catch (InvalidPropertyException e) {
+            System.out.println("Cannot update property: " + e.getMessage());
         }
     }
 
@@ -411,6 +524,7 @@ public class Main {
         while (true) {
 
             System.out.print(message);
+
             String input = sc.nextLine().trim()
                     .toUpperCase()
                     .replace(' ', '_');
