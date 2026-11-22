@@ -5,21 +5,23 @@ import com.estatehub.model.*;
 import com.estatehub.repository.*;
 import com.estatehub.service.*;
 import com.estatehub.util.EMICalculator;
+import com.estatehub.exceptions.InvalidPropertyException;
+import com.estatehub.exceptions.PropertyNotFoundException;
 
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
 
-    private static final Scanner sc = new Scanner(System.in);
+    private static Scanner sc = new Scanner(System.in);
 
-    private static final PropertyRepository repository =
+    private static PropertyRepository repository =
             new InMemoryPropertyRepository();
 
-    private static final PropertyService propertyService =
+    private static PropertyService propertyService =
             new PropertyService(repository);
 
-    private static final PropertySearchService searchService =
+    private static PropertySearchService searchService =
             new PropertySearchService(propertyService);
 
     public static void main(String[] args) {
@@ -27,9 +29,9 @@ public class Main {
         int choice;
 
         do {
-            System.out.println("\n====================================");
-            System.out.println("       ESTATEHUB - PROPERTY MANAGER");
-            System.out.println("====================================");
+            System.out.println("\n==============================================");
+            System.out.println("       ESTATEHUB - PROPERTY MANAGEMENT");
+            System.out.println("==============================================");
             System.out.println("1. Add Property");
             System.out.println("2. View All Properties");
             System.out.println("3. Search Property by ID");
@@ -40,162 +42,246 @@ public class Main {
             System.out.println("8. Delete Property");
             System.out.println("9. EMI Calculator");
             System.out.println("0. Exit");
-            System.out.println("====================================");
+            System.out.println("==============================================");
 
-            choice = readInt("Enter your choice: ");
+            System.out.print("Enter your choice: ");
+            choice = readInt();
 
-            try {
-                switch (choice) {
-                    case 1:
-                        addProperty();
-                        break;
-                    case 2:
-                        displayProperties(propertyService.getAllProperties());
-                        break;
-                    case 3:
-                        searchById();
-                        break;
-                    case 4:
-                        searchByCity();
-                        break;
-                    case 5:
-                        searchByLocality();
-                        break;
-                    case 6:
-                        filterProperties();
-                        break;
-                    case 7:
-                        sortProperties();
-                        break;
-                    case 8:
-                        deleteProperty();
-                        break;
-                    case 9:
-                        calculateEMI();
-                        break;
-                    case 0:
-                        System.out.println("Thank you for using EstateHub!");
-                        break;
-                    default:
-                        System.out.println("Invalid choice. Try again.");
-                }
-            } catch (IllegalArgumentException e) {
-                System.out.println("Error: " + e.getMessage());
+            switch (choice) {
+
+                case 1:
+                    addProperty();
+                    break;
+
+                case 2:
+                    displayProperties(propertyService.getAllProperties());
+                    break;
+
+                case 3:
+                    searchById();
+                    break;
+
+                case 4:
+                    searchByCity();
+                    break;
+
+                case 5:
+                    searchByLocality();
+                    break;
+
+                case 6:
+                    filterProperties();
+                    break;
+
+                case 7:
+                    sortProperties();
+                    break;
+
+                case 8:
+                    deleteProperty();
+                    break;
+
+                case 9:
+                    calculateEMI();
+                    break;
+
+                case 0:
+                    System.out.println("Thank you for using EstateHub!");
+                    break;
+
+                default:
+                    System.out.println("Invalid menu choice. Try again.");
             }
 
         } while (choice != 0);
-
-        sc.close();
     }
+
+    // ADD PROPERTY
 
     private static void addProperty() {
 
-        System.out.println("\n--- ADD PROPERTY ---");
+        try {
+            System.out.println("\n--- ADD NEW PROPERTY ---");
 
-        int id = readInt("Property ID: ");
+            System.out.print("Enter property ID: ");
+            int id = readInt();
 
-        System.out.print("Title: ");
-        String title = sc.nextLine();
+            System.out.print("Enter property title: ");
+            String title = sc.nextLine();
 
-        PropertyPurpose purpose =
-                readEnum(PropertyPurpose.class, "Purpose (BUY/RENT): ");
+            PropertyPurpose purpose =
+                    readEnum(PropertyPurpose.class, "Purpose (BUY/RENT): ");
 
-        PropertyType type =
-                readEnum(PropertyType.class, "Type: ");
+            PropertyType type =
+                    readEnum(PropertyType.class,
+                            "Type (APARTMENT/HOUSE/VILLA/PLOT/COMMERCIAL): ");
 
-        System.out.print("City: ");
-        String city = sc.nextLine();
+            System.out.print("Enter city: ");
+            String city = sc.nextLine();
 
-        System.out.print("Locality: ");
-        String locality = sc.nextLine();
+            System.out.print("Enter locality: ");
+            String locality = sc.nextLine();
 
-        System.out.print("Address: ");
-        String address = sc.nextLine();
+            System.out.print("Enter address: ");
+            String address = sc.nextLine();
 
-        double price = readDouble("Price: ");
-        int bedrooms = readInt("Bedrooms: ");
-        int bathrooms = readInt("Bathrooms: ");
-        double area = readDouble("Area (sq. ft.): ");
+            System.out.print("Enter price: ");
+            double price = readDouble();
 
-        FurnishingStatus furnishing =
-                readEnum(FurnishingStatus.class,
-                        "Furnishing (FURNISHED/SEMI_FURNISHED/UNFURNISHED): ");
+            System.out.print("Enter bedrooms: ");
+            int bedrooms = readInt();
 
-        System.out.print("Description: ");
-        String description = sc.nextLine();
+            System.out.print("Enter bathrooms: ");
+            int bathrooms = readInt();
 
-        int ownerId = readInt("Owner ID: ");
+            System.out.print("Enter area in sq. ft.: ");
+            double area = readDouble();
 
-        Property property = new Property(
-                id, title, purpose, type,
-                city, locality, address,
-                price, bedrooms, bathrooms, area,
-                furnishing, description,
-                ListingStatus.PENDING, ownerId
-        );
+            FurnishingStatus furnishing =
+                    readEnum(FurnishingStatus.class,
+                            "Furnishing (FURNISHED/SEMI_FURNISHED/UNFURNISHED): ");
 
-        propertyService.addProperty(property);
+            System.out.print("Enter description: ");
+            String description = sc.nextLine();
 
-        System.out.println("Property added successfully!");
-    }
+            System.out.print("Enter owner ID: ");
+            int ownerId = readInt();
 
-    private static void searchById() {
+            Property property = new Property(
+                    id,
+                    title,
+                    purpose,
+                    type,
+                    city,
+                    locality,
+                    address,
+                    price,
+                    bedrooms,
+                    bathrooms,
+                    area,
+                    furnishing,
+                    description,
+                    ListingStatus.PENDING,
+                    ownerId
+            );
 
-        int id = readInt("Enter property ID: ");
+            propertyService.addProperty(property);
 
-        Property property = searchService.searchById(id);
+            System.out.println("Property added successfully!");
 
-        if (property == null) {
-            System.out.println("Property not found.");
-        } else {
-            System.out.println(property);
+        } catch (InvalidPropertyException e) {
+            System.out.println("Cannot add property: " + e.getMessage());
+
+        } catch (Exception e) {
+            System.out.println("Something went wrong: " + e.getMessage());
         }
     }
 
+    // VIEW AND DISPLAY PROPERTIES
+
+    private static void displayProperties(List<Property> properties) {
+
+        if (properties == null || properties.isEmpty()) {
+            System.out.println("No properties found.");
+            return;
+        }
+
+        System.out.println("\n--- PROPERTY LIST ---");
+
+        for (Property property : properties) {
+            System.out.println("----------------------------------");
+            System.out.println(property);
+        }
+
+        System.out.println("----------------------------------");
+        System.out.println("Total properties: " + properties.size());
+    }
+
+    // SEARCH BY ID
+
+    private static void searchById() {
+
+        try {
+            System.out.print("Enter property ID: ");
+            int id = readInt();
+
+            Property property = searchService.searchById(id);
+
+            System.out.println("\nProperty found:");
+            System.out.println(property);
+
+        } catch (PropertyNotFoundException e) {
+            System.out.println("Error: " + e.getMessage());
+
+        } catch (InvalidPropertyException e) {
+            System.out.println("Invalid input: " + e.getMessage());
+        }
+    }
+
+    // SEARCH BY CITY
+
     private static void searchByCity() {
 
-        System.out.print("Enter city: ");
+        System.out.print("Enter city name: ");
         String city = sc.nextLine();
 
-        displayProperties(searchService.searchByCity(city));
+        List<Property> result = searchService.searchByCity(city);
+
+        displayProperties(result);
     }
+
+    // SEARCH BY LOCALITY
 
     private static void searchByLocality() {
 
         System.out.print("Enter locality: ");
         String locality = sc.nextLine();
 
-        displayProperties(searchService.searchByLocality(locality));
+        List<Property> result =
+                searchService.searchByLocality(locality);
+
+        displayProperties(result);
     }
+
+    // FILTER PROPERTIES
 
     private static void filterProperties() {
 
-        System.out.println("\n1. Filter by Purpose");
-        System.out.println("2. Filter by Property Type");
-        System.out.println("3. Filter by Price");
+        System.out.println("\n--- FILTER PROPERTIES ---");
+        System.out.println("1. Filter by Purpose");
+        System.out.println("2. Filter by Type");
+        System.out.println("3. Filter by Price Range");
 
-        int choice = readInt("Choose filter: ");
+        System.out.print("Enter choice: ");
+        int choice = readInt();
 
         switch (choice) {
 
             case 1:
                 PropertyPurpose purpose =
-                        readEnum(PropertyPurpose.class, "Enter BUY or RENT: ");
+                        readEnum(PropertyPurpose.class,
+                                "Enter purpose (BUY/RENT): ");
+
                 displayProperties(searchService.filterByPurpose(purpose));
                 break;
 
             case 2:
                 PropertyType type =
-                        readEnum(PropertyType.class, "Enter property type: ");
+                        readEnum(PropertyType.class,
+                                "Enter type: ");
+
                 displayProperties(searchService.filterByType(type));
                 break;
 
             case 3:
-                double min = readDouble("Minimum price: ");
-                double max = readDouble("Maximum price: ");
+                System.out.print("Enter minimum price: ");
+                double min = readDouble();
 
-                if (min > max) {
-                    System.out.println("Minimum price cannot exceed maximum.");
+                System.out.print("Enter maximum price: ");
+                double max = readDouble();
+
+                if (min < 0 || max < min) {
+                    System.out.println("Invalid price range.");
                     break;
                 }
 
@@ -207,12 +293,16 @@ public class Main {
         }
     }
 
+    // SORT PROPERTIES
+
     private static void sortProperties() {
 
-        System.out.println("\n1. Sort by Price");
+        System.out.println("\n--- SORT PROPERTIES ---");
+        System.out.println("1. Sort by Price");
         System.out.println("2. Sort by Area");
 
-        int choice = readInt("Choose sorting option: ");
+        System.out.print("Enter choice: ");
+        int choice = readInt();
 
         switch (choice) {
 
@@ -229,100 +319,107 @@ public class Main {
         }
     }
 
+    // DELETE PROPERTY
+
     private static void deleteProperty() {
 
-        int id = readInt("Enter property ID to delete: ");
+        try {
+            System.out.print("Enter property ID to delete: ");
+            int id = readInt();
 
-        boolean deleted = propertyService.deleteProperty(id);
+            boolean deleted = propertyService.deleteProperty(id);
 
-        if (deleted) {
-            System.out.println("Property deleted successfully.");
-        } else {
-            System.out.println("Property not found.");
+            if (deleted) {
+                System.out.println("Property deleted successfully!");
+            }
+
+        } catch (PropertyNotFoundException e) {
+            System.out.println("Error: " + e.getMessage());
+
+        } catch (InvalidPropertyException e) {
+            System.out.println("Invalid input: " + e.getMessage());
         }
     }
+
+    // EMI CALCULATOR
 
     private static void calculateEMI() {
 
-        double loan = readDouble("Loan amount: ");
-        double interest = readDouble("Annual interest rate (%): ");
-        int years = readInt("Loan tenure (years): ");
+        try {
+            System.out.println("\n--- EMI CALCULATOR ---");
 
-        double emi = EMICalculator.calculateEMI(
-                loan, interest, years
-        );
+            System.out.print("Enter loan amount: ");
+            double loan = readDouble();
 
-        System.out.printf("Monthly EMI: %.2f%n", emi);
-    }
+            System.out.print("Enter annual interest rate: ");
+            double rate = readDouble();
 
-    private static void displayProperties(List<Property> properties) {
+            System.out.print("Enter tenure in years: ");
+            int years = readInt();
 
-        if (properties.isEmpty()) {
-            System.out.println("No properties found.");
-            return;
-        }
+            double emi = EMICalculator.calculateEMI(
+                    loan, rate, years
+            );
 
-        for (Property property : properties) {
-            System.out.println("\n----------------------------");
-            System.out.println(property);
-        }
+            System.out.printf("Monthly EMI: Rs. %.2f%n", emi);
 
-        System.out.println("----------------------------");
-        System.out.println("Total properties: " + properties.size());
-    }
-
-    private static int readInt(String message) {
-
-        while (true) {
-            try {
-                System.out.print(message);
-                int value = Integer.parseInt(sc.nextLine().trim());
-                return value;
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid whole number.");
-            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid EMI details: " + e.getMessage());
         }
     }
 
-    private static double readDouble(String message) {
+    // INTEGER INPUT
 
-        while (true) {
-            try {
-                System.out.print(message);
-                double value = Double.parseDouble(sc.nextLine().trim());
+    private static int readInt() {
 
-                if (!Double.isFinite(value)) {
-                    System.out.println("Enter a finite number.");
-                    continue;
-                }
-
-                return value;
-
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number.");
-            }
+        while (!sc.hasNextInt()) {
+            System.out.print("Please enter a valid integer: ");
+            sc.next();
         }
+
+        int value = sc.nextInt();
+        sc.nextLine();
+
+        return value;
     }
+
+    // DECIMAL INPUT
+
+    private static double readDouble() {
+
+        while (!sc.hasNextDouble()) {
+            System.out.print("Please enter a valid number: ");
+            sc.next();
+        }
+
+        double value = sc.nextDouble();
+        sc.nextLine();
+
+        if (!Double.isFinite(value)) {
+            System.out.println("Please enter a finite number.");
+            return readDouble();
+        }
+
+        return value;
+    }
+
+    // ENUM INPUT
 
     private static <T extends Enum<T>> T readEnum(
             Class<T> enumClass, String message) {
 
         while (true) {
-            System.out.print(message);
 
-            String input = sc.nextLine()
-                    .trim()
+            System.out.print(message);
+            String input = sc.nextLine().trim()
                     .toUpperCase()
                     .replace(' ', '_');
 
             try {
                 return Enum.valueOf(enumClass, input);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid option. Available values:");
 
-                for (T value : enumClass.getEnumConstants()) {
-                    System.out.println("- " + value);
-                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("Invalid choice. Please try again.");
             }
         }
     }
