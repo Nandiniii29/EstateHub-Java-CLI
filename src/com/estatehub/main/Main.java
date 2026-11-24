@@ -1,13 +1,12 @@
 
 package com.estatehub.main;
-
+import com.estatehub.exceptions.InvalidPropertyException;
+import com.estatehub.exceptions.Member2ValidationException;
+import com.estatehub.exceptions.PropertyNotFoundException;
 import com.estatehub.model.*;
 import com.estatehub.repository.*;
 import com.estatehub.service.*;
 import com.estatehub.util.EMICalculator;
-import com.estatehub.exceptions.InvalidPropertyException;
-import com.estatehub.exceptions.PropertyNotFoundException;
-
 import java.util.List;
 import java.util.Scanner;
 
@@ -23,6 +22,8 @@ public class Main {
 
     private static PropertySearchService searchService =
             new PropertySearchService(propertyService);
+
+    private static UserService userService = new UserService();
 
     public static void main(String[] args) {
 
@@ -42,6 +43,7 @@ public class Main {
             System.out.println("8. Delete Property");
             System.out.println("9. EMI Calculator");
             System.out.println("10. Update Property");
+            System.out.println("11. User Management");
             System.out.println("0. Exit");
             System.out.println("==============================================");
 
@@ -88,6 +90,10 @@ public class Main {
 
                 case 10:
                     updateProperty();
+                    break;
+
+                case 11:
+                    userManagementMenu();
                     break;
 
                 case 0:
@@ -559,6 +565,103 @@ private static void filterProperties() {
 
         return value;
     }
+    // USER MANAGEMENT MENU
+
+private static void userManagementMenu() {
+
+    int choice;
+
+    do {
+        System.out.println("\n========== USER MANAGEMENT MENU ==========");
+        System.out.println("1. Register New User");
+        System.out.println("2. Login");
+        System.out.println("3. Update Profile");
+        System.out.println("4. Change Password");
+        System.out.println("5. Logout");
+        System.out.println("0. Back to Main Menu");
+
+        System.out.print("Enter your choice: ");
+
+        try {
+            choice = Integer.parseInt(sc.nextLine());
+
+            try {
+                switch (choice) {
+
+                    case 1:
+                        System.out.print("Enter name: ");
+                        String name = sc.nextLine();
+
+                        System.out.print("Enter email: ");
+                        String email = sc.nextLine();
+
+                        System.out.print("Enter phone: ");
+                        String phone = sc.nextLine();
+
+                        System.out.print("Enter password: ");
+                        String password = sc.nextLine();
+
+                        userService.register(name, email, phone, password);
+                        System.out.println("Registration successful!");
+                        break;
+
+                    case 2:
+                        System.out.print("Enter email: ");
+                        String loginEmail = sc.nextLine();
+
+                        System.out.print("Enter password: ");
+                        String loginPassword = sc.nextLine();
+
+                        userService.login(loginEmail, loginPassword);
+                        System.out.println("Login successful!");
+                        break;
+
+                    case 3:
+                        System.out.print("Enter new name: ");
+                        String newName = sc.nextLine();
+
+                        System.out.print("Enter new phone: ");
+                        String newPhone = sc.nextLine();
+
+                        userService.updateProfile(newName, newPhone);
+                        System.out.println("Profile updated!");
+                        break;
+
+                    case 4:
+                        System.out.print("Enter current password: ");
+                        String oldPassword = sc.nextLine();
+
+                        System.out.print("Enter new password: ");
+                        String newPassword = sc.nextLine();
+
+                        userService.changePassword(oldPassword, newPassword);
+                        System.out.println("Password changed!");
+                        break;
+
+                    case 5:
+                        userService.logout();
+                        System.out.println("Logged out successfully.");
+                        break;
+
+                    case 0:
+                        System.out.println("Returning to main menu...");
+                        break;
+
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+
+            } catch (Member2ValidationException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter a valid number.");
+            choice = -1;
+        }
+
+    } while (choice != 0);
+}
 
     // ENUM INPUT
 
