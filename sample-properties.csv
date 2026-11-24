@@ -1,0 +1,4 @@
+propertyId,title,purpose,type,city,locality,address,price,bedrooms,bathrooms,area,furnishingStatus,description,listingStatus,ownerId
+901,Modern Apartment,BUY,APARTMENT,Patiala,Urban Estate,"House 25, Street 4",4500000,3,2,1500,SEMI_FURNISHED,Spacious apartment,APPROVED,1
+902,Family Villa,BUY,VILLA,Chandigarh,Sector 20,"Plot 45, Main Road",8500000,4,3,2500,FURNISHED,Beautiful family villa,APPROVED,2
+903,Office Space,RENT,COMMERCIAL,Patiala,Leela Bhawan,"Shop 12, Market Road",25000,0,1,800,UNFURNISHED,Commercial office space,PENDING,3
