@@ -9,6 +9,8 @@ import com.estatehub.repository.*;
 import com.estatehub.service.*;
 import com.estatehub.util.EMICalculator;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -35,6 +37,8 @@ public class Main {
 
     private static InquiryService inquiryService =
         new InquiryService(new MySQLInquiryRepository());
+    private static TourRequestService tourRequestService =
+    new TourRequestService();
 
     private static AdminReportService reportService =
         new AdminReportService(inquiryService);
@@ -755,18 +759,24 @@ reportService.getInquiriesByStatus().forEach(
 
     // USER MANAGEMENT MENU
 
+
 private static void userManagementMenu() {
 
     int choice;
 
     do {
+        System.out.println("\n--- USER MANAGEMENT ---");
         System.out.println("1. Register New User");
-System.out.println("2. Login");
-System.out.println("3. Update Profile");
-System.out.println("4. Change Password");
-System.out.println("5. Submit Property Inquiry");
-System.out.println("6. Logout");
-System.out.println("0. Back to Main Menu");
+        System.out.println("2. Login");
+        System.out.println("3. Update Profile");
+        System.out.println("4. Change Password");
+        System.out.println("5. Submit Property Inquiry");
+        System.out.println("6. View Inquiry History");
+        System.out.println("7. Cancel Inquiry");
+        System.out.println("8. Request Property Tour");
+        System.out.println("9. View Tour Requests");
+        System.out.println("10. Logout");
+        System.out.println("0. Back to Main Menu");
 
         System.out.print("Enter your choice: ");
 
@@ -776,7 +786,7 @@ System.out.println("0. Back to Main Menu");
             try {
                 switch (choice) {
 
-                    case 1:
+                    case 1: {
                         System.out.print("Enter name: ");
                         String name = sc.nextLine();
 
@@ -792,30 +802,33 @@ System.out.println("0. Back to Main Menu");
                         userService.register(name, email, phone, password);
                         System.out.println("Registration successful!");
                         break;
+                    }
 
-                    case 2:
+                    case 2: {
                         System.out.print("Enter email: ");
-                        String loginEmail = sc.nextLine();
+                        String email = sc.nextLine();
 
                         System.out.print("Enter password: ");
-                        String loginPassword = sc.nextLine();
+                        String password = sc.nextLine();
 
-                        userService.login(loginEmail, loginPassword);
+                        userService.login(email, password);
                         System.out.println("Login successful!");
                         break;
+                    }
 
-                    case 3:
+                    case 3: {
                         System.out.print("Enter new name: ");
-                        String newName = sc.nextLine();
+                        String name = sc.nextLine();
 
                         System.out.print("Enter new phone: ");
-                        String newPhone = sc.nextLine();
+                        String phone = sc.nextLine();
 
-                        userService.updateProfile(newName, newPhone);
+                        userService.updateProfile(name, phone);
                         System.out.println("Profile updated!");
                         break;
+                    }
 
-                    case 4:
+                    case 4: {
                         System.out.print("Enter current password: ");
                         String oldPassword = sc.nextLine();
 
@@ -825,35 +838,131 @@ System.out.println("0. Back to Main Menu");
                         userService.changePassword(oldPassword, newPassword);
                         System.out.println("Password changed!");
                         break;
+                    }
 
-                    case 5:
-    User currentUser = userService.getCurrentUser();
+                    case 5: {
+                        User user = userService.getCurrentUser();
 
-    if (currentUser == null) {
-        System.out.println("Please login first.");
-        break;
-    }
+                        if (user == null) {
+                            System.out.println("Please login first.");
+                            break;
+                        }
 
-    System.out.print("Enter Property ID: ");
-    String propertyId = sc.nextLine();
+                        System.out.print("Enter Property ID: ");
+                        String propertyId = sc.nextLine();
 
-    System.out.print("Enter Inquiry Type (GENERAL / VISIT / PRICE): ");
-    String inquiryType = sc.nextLine();
+                        System.out.print("Enter Inquiry Type: ");
+                        String type = sc.nextLine();
 
-    System.out.print("Enter your message: ");
-    String message = sc.nextLine();
+                        System.out.print("Enter message: ");
+                        String message = sc.nextLine();
 
-    Inquiry inquiry = inquiryService.submit(
-            currentUser.getUserId(),
-            propertyId,
-            inquiryType,
-            message
-    );
+                        Inquiry inquiry = inquiryService.submit(
+                                user.getUserId(), propertyId, type, message
+                        );
 
-    System.out.println("Inquiry submitted successfully!");
-    System.out.println(inquiry);
-    break;
-                    case 6:
+                        System.out.println("Inquiry submitted!");
+                        System.out.println(inquiry);
+                        break;
+                    }
+
+                    case 6: {
+                        User user = userService.getCurrentUser();
+
+                        if (user == null) {
+                            System.out.println("Please login first.");
+                            break;
+                        }
+
+                        List<Inquiry> history =
+                                inquiryService.getHistory(user.getUserId());
+
+                        if (history.isEmpty()) {
+                            System.out.println("No inquiries found.");
+                        } else {
+                            for (Inquiry item : history) {
+                                System.out.println(item);
+                                System.out.println("--------------------");
+                            }
+                        }
+                        break;
+                    }
+
+                    case 7: {
+                        User user = userService.getCurrentUser();
+
+                        if (user == null) {
+                            System.out.println("Please login first.");
+                            break;
+                        }
+
+                        System.out.print("Enter Inquiry ID: ");
+                        String inquiryId = sc.nextLine();
+
+                        boolean cancelled = inquiryService.cancel(
+                                user.getUserId(), inquiryId
+                        );
+
+                        System.out.println(cancelled
+                                ? "Inquiry cancelled!"
+                                : "Inquiry could not be cancelled.");
+                        break;
+                    }
+
+                    case 8: {
+                        User user = userService.getCurrentUser();
+
+                        if (user == null) {
+                            System.out.println("Please login first.");
+                            break;
+                        }
+
+                        System.out.print("Enter Property ID: ");
+                        String propertyId = sc.nextLine();
+
+                        System.out.print("Enter preferred date (YYYY-MM-DD): ");
+                        LocalDate date = LocalDate.parse(sc.nextLine());
+
+                        System.out.print("Enter additional details: ");
+                        String details = sc.nextLine();
+
+                        TourRequest tour = tourRequestService.requestTour(
+                                user.getUserId(), propertyId, date, details
+                        );
+
+                        System.out.println("Tour request submitted!");
+                        System.out.println("Request ID: " + tour.getRequestId());
+                        break;
+                    }
+
+                    case 9: {
+                        User user = userService.getCurrentUser();
+
+                        if (user == null) {
+                            System.out.println("Please login first.");
+                            break;
+                        }
+
+                        List<TourRequest> tours =
+                                tourRequestService.getRequestsForUser(
+                                        user.getUserId()
+                                );
+
+                        if (tours.isEmpty()) {
+                            System.out.println("No tour requests found.");
+                        } else {
+                            for (TourRequest tour : tours) {
+                                System.out.println("Request ID: " + tour.getRequestId());
+                                System.out.println("Property ID: " + tour.getPropertyId());
+                                System.out.println("Preferred Date: " + tour.getPreferredDate());
+                                System.out.println("Details: " + tour.getDetails());
+                                System.out.println("--------------------");
+                            }
+                        }
+                        break;
+                    }
+
+                    case 10:
                         userService.logout();
                         System.out.println("Logged out successfully.");
                         break;
@@ -868,6 +977,9 @@ System.out.println("0. Back to Main Menu");
 
             } catch (Member2ValidationException e) {
                 System.out.println("Operation failed: " + e.getMessage());
+
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date. Use YYYY-MM-DD.");
             }
 
         } catch (NumberFormatException e) {
@@ -877,6 +989,7 @@ System.out.println("0. Back to Main Menu");
 
     } while (choice != 0);
 }
+
 
     // ENUM INPUT
 
