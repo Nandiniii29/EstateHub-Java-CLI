@@ -1,79 +1,130 @@
 # EstateHub - Java CLI Property Management System
 
-A modular, console-based Property Management Application in Java, adapted from the EstateHub real estate platform. Designed for academic pair programming and structured across 5 core Java milestones.
+A console-based property management application developed in Java as an academic team project. It demonstrates object-oriented programming, collections, exception handling, multithreading, JDBC, and MySQL database operations.
 
----
+## Project Features
 
-## 📌 Project Overview
+- Add, view, search, update, and delete property listings.
+- Search properties by city and locality.
+- Filter and sort property records.
+- Calculate home loan EMIs.
+- Register and log in users, update profiles, and change passwords.
+- Submit, view, and cancel property inquiries.
+- Request and view property tours.
+- Admin features for property approval, rejection, dashboards, and inquiry reports.
+- Import property records from CSV.
+- Export inquiry reports to CSV.
+- Multithreading, synchronization, producer-consumer, and executor framework demonstrations.
 
-**EstateHub Java CLI** allows property seekers, property owners, and platform administrators to manage, search, inspect, and evaluate real estate listings through an interactive command-line interface.
+## Technologies Used
 
-The application incorporates real-world property workflows including:
-- Property listings, categorization, and specification tracking
-- Search and multi-criteria filtering (location, purpose, price, type, amenities)
-- User authentication and role-based access control (Seeker vs. Administrator)
-- Inquiries and site tour request workflows
-- Financial tools (reducing-balance EMI calculator and amortization schedule)
-- Side-by-side property comparison
+- Java (JDK 17 or later)
+- MySQL
+- JDBC
+- MySQL Connector/J
+- Java Collections Framework
+- Java Concurrency API
+- CSV file handling
 
----
+## Project Structure
 
-## 🎯 Academic Milestones
-
-The project is developed progressively across five academic milestones:
-
-| Milestone | Focus Area | Description |
-| :--- | :--- | :--- |
-| **Milestone 1** | **OOP, Strings & Exception Handling** | Domain modeling (`Property`, `User`, `Inquiry`), inheritance hierarchies, encapsulation, string parsing/formatting, input validation, and custom exception handling. |
-| **Milestone 2** | **Collections & Record Management** | Managing in-memory datasets with Java Collections Framework (`List`, `Set`, `Map`), search & filter predicates, sorting (`Comparable`/`Comparator`), and file persistence. |
-| **Milestone 3** | **Multithreading & Synchronization** | Concurrent request handling, critical sections, thread synchronization (`synchronized`, locks), and thread-safe data access. |
-| **Milestone 4** | **Producer-Consumer & Executor Framework** | Producer-consumer architecture using thread-safe queues (e.g., inquiry ingestion and notification processing), worker pools via `ExecutorService`, and graceful shutdown. |
-| **Milestone 5** | **JDBC & Relational Database** | Database persistence via JDBC, relational schema design (`properties`, `users`, `inquiries`), prepared statements, transactions, and DAO pattern. |
-
----
-
-## 📁 Repository Structure
-
-```
+```text
 EstateHub-Java-CLI/
-├── src/
-│   └── com/
-│       └── estatehub/
-│           ├── main/          # Application entry point and CLI menu controller
-│           ├── model/         # Domain entities (Property, User, Inquiry, enums)
-│           ├── service/       # Business logic (Auth, Property, Inquiry, EMI calculation)
-│           ├── repository/    # Data access interfaces and storage implementations
-│           ├── exceptions/    # Custom checked and unchecked exceptions
-│           ├── concurrency/   # Thread workers, synchronization, queues, and executors
-│           ├── database/      # JDBC connection management, helpers, and DAOs
-│           └── util/          # Utility helpers (formatting, validation, input reading)
-├── sql/                       # SQL scripts for database DDL schemas and seed data
-├── tests/                     # Test runners and milestone verification suites
-├── evidence/                  # Execution logs, output captures, and milestone deliverables
+├── src/com/estatehub/
+│   ├── concurrency/
+│   ├── database/
+│   ├── exceptions/
+│   ├── main/
+│   ├── model/
+│   ├── repository/
+│   ├── service/
+│   └── util/
+├── sql/
+├── tests/
+├── evidence/
 │   ├── milestone-1/
 │   ├── milestone-2/
 │   ├── milestone-3/
 │   ├── milestone-4/
 │   └── milestone-5/
-├── .gitignore                 # Standard Java, IDE, and OS ignore rules
-└── README.md                  # Project documentation and roadmap
+├── sample-properties.csv
+├── lib/
+│   └── mysql-connector-j-26.10.0.jar
+├── .gitignore
+└── README.md
 ```
 
----
+## Prerequisites
 
-## 🚀 Getting Started
+1. Java JDK 17 or later.
+2. MySQL Server.
+3. MySQL Connector/J JAR.
+4. A MySQL database named `estatehub_db`.
 
-### Prerequisites
-- **Java Development Kit (JDK)**: Version 17 or higher (tested with modern OpenJDK/Oracle JDK).
-- No external frameworks or package managers required.
+Place the MySQL Connector/J JAR in the `lib` directory. The JAR is a dependency and is not committed to this repository.
 
-### Compilation
-From the project root:
-```bash
-javac -d bin -sourcepath src src/com/estatehub/main/Main.java
+## Database Configuration
+
+The application connects to:
+
+```text
+jdbc:mysql://localhost:3306/estatehub_db
 ```
 
-### Execution
-```bash
-java -cp bin com.estatehub.main.Main
+Configure these environment variables before running the application:
+
+- `ESTATEHUB_DB_USER` — your MySQL username.
+- `ESTATEHUB_DB_PASSWORD` — your MySQL password.
+
+The database must contain the `properties` and `inquiries` tables with the columns expected by the application repositories. See the SQL setup instructions in the `sql` directory.
+
+## Compile and Run (Windows PowerShell)
+
+Open PowerShell in the project root directory.
+
+### 1. Configure database credentials
+
+```powershell
+$env:ESTATEHUB_DB_USER = "your_mysql_username"
+$securePassword = Read-Host "Enter MySQL password" -AsSecureString
+$env:ESTATEHUB_DB_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
 ```
+
+Replace `your_mysql_username` with your own MySQL username. Do not commit database credentials.
+
+### 2. Compile the project
+
+```powershell
+javac -cp "lib\mysql-connector-j-26.10.0.jar" -d out (Get-ChildItem -Path src -Recurse -Filter *.java | ForEach-Object { $_.FullName })
+```
+
+### 3. Run the application
+
+```powershell
+java -cp "out;lib\mysql-connector-j-26.10.0.jar" com.estatehub.main.Main
+```
+
+### 4. Test the database connection (optional)
+
+```powershell
+java -cp "out;lib\mysql-connector-j-26.10.0.jar" com.estatehub.main.DatabaseConnectionTest
+```
+
+## Data Storage Notes
+
+- Property records are stored in MySQL.
+- Customer inquiries are stored in MySQL.
+- User accounts, profile changes, and tour requests currently use in-memory storage and are reset when the application process exits.
+- CSV inquiry reports are generated in the `exports` directory.
+
+## Academic Project
+
+The project covers five broad learning areas:
+
+1. OOP, strings, validation, and exception handling.
+2. Collections, searching, filtering, and sorting.
+3. Multithreading and synchronization.
+4. Producer-consumer architecture and executor framework.
+5. JDBC and relational database operations.
+
+Screenshots and execution evidence for the academic milestones are maintained in the `evidence` directory.

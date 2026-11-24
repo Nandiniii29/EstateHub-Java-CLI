@@ -1,9 +1,15 @@
-# Milestone Evidence Directory
+# Milestone Evidence
 
-This directory stores outputs, console execution logs, and evidence for academic submission across each milestone:
+This directory is reserved for screenshots, console outputs, and other evidence of the EstateHub project.
 
-- `milestone-1/`: Output of OOP models, string utilities, and exception triggers.
-- `milestone-2/`: Output of collection management, search/filter queries, and record storage.
-- `milestone-3/`: Output demonstrating multithreaded concurrency and synchronization safety.
-- `milestone-4/`: Output demonstrating producer-consumer queues and thread pool execution.
-- `milestone-5/`: Database connection logs, query outputs, and persistence verification.
+Add relevant evidence to the corresponding milestone folder:
+
+- milestone-1: OOP models, strings, validation, and exception handling.
+- milestone-2: Collections, property management, searching, filtering, and sorting.
+- milestone-3: Multithreading and synchronization demonstrations.
+- milestone-4: Producer-consumer and executor framework demonstrations.
+- milestone-5: MySQL connectivity, JDBC operations, and database persistence.
+
+Evidence files should be clearly named and should demonstrate actual project execution.
+
+Note: The milestone folders currently contain placeholders. Add screenshots or execution logs before the final academic submission.
