@@ -33,6 +33,14 @@ public class Main {
 
     private static UserService userService = new UserService();
 
+    private static InquiryService inquiryService =
+        new InquiryService(new MySQLInquiryRepository());
+
+    private static AdminReportService reportService =
+        new AdminReportService(inquiryService);
+
+    private static CSVExportService csvExportService =
+        new CSVExportService(inquiryService);
     public static void main(String[] args) {
 
         int choice;
@@ -589,6 +597,9 @@ private static void adminMenu() {
         System.out.println("2. Approve Property");
         System.out.println("3. Reject Property");
         System.out.println("4. View Admin Dashboard");
+        System.out.println("5. View All Customer Inquiries");
+        System.out.println("6. View Inquiry Reports");
+        System.out.println("7. Export Inquiries to CSV");
         System.out.println("0. Back to Main Menu");
 
         System.out.print("Enter choice: ");
@@ -640,11 +651,90 @@ private static void adminMenu() {
             dashboardService.getPropertyStatistics();
 
     for (ListingStatus status : ListingStatus.values()) {
-        System.out.println(status + " Properties: " + stats.get(status));
+    System.out.println(status + " Properties: " + stats.get(status));
+}
+
+// Properties by Purpose
+System.out.println("\n--- Properties by Purpose ---");
+dashboardService.getPropertiesByPurpose().forEach(
+    (purpose, count) ->
+        System.out.println(purpose + ": " + count)
+);
+
+// Properties by City
+System.out.println("\n--- Properties by City ---");
+dashboardService.getPropertiesByCity().forEach(
+    (city, count) ->
+        System.out.println(city + ": " + count)
+);
+
+// Properties by Type
+System.out.println("\n--- Properties by Type ---");
+dashboardService.getPropertiesByType().forEach(
+    (type, count) ->
+        System.out.println(type + ": " + count)
+);
+
+break;
+
+
+    case 5:
+    System.out.println("\n========== CUSTOMER INQUIRIES ==========");
+
+    if (inquiryService.getAllInquiries().isEmpty()) {
+        System.out.println("No customer inquiries found.");
+    } else {
+        for (Inquiry inquiry : inquiryService.getAllInquiries()) {
+            System.out.println(inquiry);
+        }
+    }
+    break;
+
+
+    case 6:
+    System.out.println("\n========== INQUIRY REPORTS ==========");
+
+    System.out.println(
+        "Total Inquiries: " + reportService.getTotalInquiries()
+    );
+
+    System.out.println(
+        "Pending Inquiries: " + reportService.getPendingInquiries()
+    );
+
+    System.out.println("\n--- Inquiries by Type ---");
+    reportService.getInquiriesByType().forEach(
+        (type, count) ->
+            System.out.println(type + ": " + count)
+    );
+
+    System.out.println("\n--- Inquiries by Property ---");
+    reportService.getInquiriesByProperty().forEach(
+        (propertyId, count) ->
+            System.out.println("Property " + propertyId + ": " + count)
+    );
+
+    System.out.println("\n--- Inquiries by Status ---");
+reportService.getInquiriesByStatus().forEach(
+    (status, count) ->
+        System.out.println(status + ": " + count)
+);
+    break;
+
+    case 7:
+    System.out.println("\n========== CSV EXPORT ==========");
+
+    try {
+        String filePath = csvExportService.exportInquiries();
+
+        System.out.println("Inquiries exported successfully!");
+        System.out.println("File saved at: " + filePath);
+
+    } catch (java.io.IOException e) {
+        System.out.println("CSV export failed: " + e.getMessage());
     }
 
     break;
-
                 case 0:
                     System.out.println("Returning to main menu...");
                     break;
@@ -670,13 +760,13 @@ private static void userManagementMenu() {
     int choice;
 
     do {
-        System.out.println("\n========== USER MANAGEMENT MENU ==========");
         System.out.println("1. Register New User");
-        System.out.println("2. Login");
-        System.out.println("3. Update Profile");
-        System.out.println("4. Change Password");
-        System.out.println("5. Logout");
-        System.out.println("0. Back to Main Menu");
+System.out.println("2. Login");
+System.out.println("3. Update Profile");
+System.out.println("4. Change Password");
+System.out.println("5. Submit Property Inquiry");
+System.out.println("6. Logout");
+System.out.println("0. Back to Main Menu");
 
         System.out.print("Enter your choice: ");
 
@@ -737,6 +827,33 @@ private static void userManagementMenu() {
                         break;
 
                     case 5:
+    User currentUser = userService.getCurrentUser();
+
+    if (currentUser == null) {
+        System.out.println("Please login first.");
+        break;
+    }
+
+    System.out.print("Enter Property ID: ");
+    String propertyId = sc.nextLine();
+
+    System.out.print("Enter Inquiry Type (GENERAL / VISIT / PRICE): ");
+    String inquiryType = sc.nextLine();
+
+    System.out.print("Enter your message: ");
+    String message = sc.nextLine();
+
+    Inquiry inquiry = inquiryService.submit(
+            currentUser.getUserId(),
+            propertyId,
+            inquiryType,
+            message
+    );
+
+    System.out.println("Inquiry submitted successfully!");
+    System.out.println(inquiry);
+    break;
+                    case 6:
                         userService.logout();
                         System.out.println("Logged out successfully.");
                         break;

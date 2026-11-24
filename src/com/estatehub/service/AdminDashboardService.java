@@ -1,13 +1,13 @@
 
 package com.estatehub.service;
 
-import com.estatehub.model.Property;
 import com.estatehub.model.ListingStatus;
+import com.estatehub.model.Property;
 import com.estatehub.repository.PropertyRepository;
-
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AdminDashboardService {
 
@@ -46,4 +46,34 @@ public class AdminDashboardService {
     public int getTotalProperties() {
         return repository.findAll().size();
     }
+    // Count properties according to BUY or RENT
+// Count properties according to BUY or RENT
+// Count properties according to BUY or RENT
+public Map<String, Long> getPropertiesByPurpose() {
+    return repository.findAll()
+            .stream()
+            .collect(Collectors.groupingBy(
+                    property -> property.getPurpose().name(),
+                    Collectors.counting()
+            ));
+}
+// Group properties according to city
+public Map<String, Long> getPropertiesByCity() {
+    return repository.findAll()
+            .stream()
+            .collect(Collectors.groupingBy(
+                    Property::getCity,
+                    Collectors.counting()
+            ));
+}
+
+// Group properties according to property type
+public Map<String, Long> getPropertiesByType() {
+    return repository.findAll()
+            .stream()
+            .collect(Collectors.groupingBy(
+                    property -> property.getType().name(),
+                    Collectors.counting()
+            ));
+}
 }
