@@ -1,5 +1,6 @@
 
 package com.estatehub.main;
+import com.estatehub.exceptions.InvalidInputException;
 import com.estatehub.exceptions.InvalidPropertyException;
 import com.estatehub.exceptions.Member2ValidationException;
 import com.estatehub.exceptions.PropertyNotFoundException;
@@ -8,6 +9,7 @@ import com.estatehub.repository.*;
 import com.estatehub.service.*;
 import com.estatehub.util.EMICalculator;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -19,6 +21,12 @@ public class Main {
 
     private static PropertyService propertyService =
             new PropertyService(repository);
+
+    private static AdminPropertyService adminPropertyService =
+        new AdminPropertyService(repository);
+
+    private static AdminDashboardService dashboardService =
+        new AdminDashboardService(repository);
 
     private static PropertySearchService searchService =
             new PropertySearchService(propertyService);
@@ -44,6 +52,7 @@ public class Main {
             System.out.println("9. EMI Calculator");
             System.out.println("10. Update Property");
             System.out.println("11. User Management");
+            System.out.println("12. Admin Management");
             System.out.println("0. Exit");
             System.out.println("==============================================");
 
@@ -96,6 +105,9 @@ public class Main {
                     userManagementMenu();
                     break;
 
+                case 12:
+                    adminMenu();
+                    break;
                 case 0:
                     System.out.println("Thank you for using EstateHub!");
                     break;
@@ -565,6 +577,92 @@ private static void filterProperties() {
 
         return value;
     }
+
+
+private static void adminMenu() {
+
+    int choice;
+
+    do {
+        System.out.println("\n========== ADMIN MENU ==========");
+        System.out.println("1. View Pending Properties");
+        System.out.println("2. Approve Property");
+        System.out.println("3. Reject Property");
+        System.out.println("4. View Admin Dashboard");
+        System.out.println("0. Back to Main Menu");
+
+        System.out.print("Enter choice: ");
+
+        choice = readInt();
+
+        try {
+            switch (choice) {
+
+                case 1:
+                    System.out.println("\n--- PENDING PROPERTIES ---");
+
+                    if (adminPropertyService.getPendingProperties().isEmpty()) {
+                        System.out.println("No pending properties found.");
+                    } else {
+                        for (Property property :
+                                adminPropertyService.getPendingProperties()) {
+                            System.out.println(property);
+                        }
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Enter Property ID to approve: ");
+                    int approveId = readInt();
+
+                    adminPropertyService.approveProperty(approveId);
+
+                    System.out.println("Property approved successfully!");
+                    break;
+
+                case 3:
+                    System.out.print("Enter Property ID to reject: ");
+                    int rejectId = readInt();
+
+                    adminPropertyService.rejectProperty(rejectId);
+
+                    System.out.println("Property rejected successfully!");
+                    break;
+
+                case 4:
+    System.out.println("\n========== ADMIN DASHBOARD ==========");
+
+    System.out.println(
+        "Total Properties: " + dashboardService.getTotalProperties()
+    );
+
+    Map<ListingStatus, Integer> stats =
+            dashboardService.getPropertyStatistics();
+
+    for (ListingStatus status : ListingStatus.values()) {
+        System.out.println(status + " Properties: " + stats.get(status));
+    }
+
+    break;
+
+                case 0:
+                    System.out.println("Returning to main menu...");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice.");
+            }
+
+        } catch (InvalidInputException e) {
+            System.out.println("Admin operation failed: " + e.getMessage());
+
+        } catch (RuntimeException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+
+    } while (choice != 0);
+}
+
     // USER MANAGEMENT MENU
 
 private static void userManagementMenu() {
