@@ -8,7 +8,7 @@ import java.sql.SQLException;
 public class DatabaseConnection {
 
     private static final String URL =
-            "jdbc:mysql://localhost:3306/estatehub";
+            "jdbc:mysql://localhost:3306/estatehub_db";
 
     private static final String USER =
             System.getenv("ESTATEHUB_DB_USER");
