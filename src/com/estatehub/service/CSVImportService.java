@@ -2,7 +2,6 @@
 package com.estatehub.service;
 
 import com.estatehub.model.*;
-import com.estatehub.exceptions.InvalidPropertyException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,9 +12,15 @@ import java.util.List;
 
 public class CSVImportService {
 
-    private PropertyService propertyService;
+    private final PropertyService propertyService;
 
     public CSVImportService(PropertyService propertyService) {
+        if (propertyService == null) {
+            throw new IllegalArgumentException(
+                "PropertyService cannot be null."
+            );
+        }
+
         this.propertyService = propertyService;
     }
 
@@ -57,8 +62,12 @@ public class CSVImportService {
                     Property property = new Property(
                         Integer.parseInt(values.get(0).trim()),
                         values.get(1).trim(),
-                        PropertyPurpose.valueOf(values.get(2).trim().toUpperCase()),
-                        PropertyType.valueOf(values.get(3).trim().toUpperCase()),
+                        PropertyPurpose.valueOf(
+                            values.get(2).trim().toUpperCase()
+                        ),
+                        PropertyType.valueOf(
+                            values.get(3).trim().toUpperCase()
+                        ),
                         values.get(4).trim(),
                         values.get(5).trim(),
                         values.get(6).trim(),
@@ -66,25 +75,32 @@ public class CSVImportService {
                         Integer.parseInt(values.get(8).trim()),
                         Integer.parseInt(values.get(9).trim()),
                         Double.parseDouble(values.get(10).trim()),
-                        FurnishingStatus.valueOf(values.get(11).trim().toUpperCase()),
+                        FurnishingStatus.valueOf(
+                            values.get(11).trim().toUpperCase()
+                        ),
                         values.get(12).trim(),
-                        ListingStatus.valueOf(values.get(13).trim().toUpperCase()),
+                        ListingStatus.valueOf(
+                            values.get(13).trim().toUpperCase()
+                        ),
                         Integer.parseInt(values.get(14).trim())
                     );
 
                     propertyService.addProperty(property);
 
                     successful++;
+
                     System.out.println(
-                        "Row " + rowNumber + ": Property imported successfully."
+                        "Row " + rowNumber +
+                        ": Property imported successfully."
                     );
 
-                } catch (InvalidPropertyException | IllegalArgumentException e) {
+                } catch (RuntimeException e) {
 
                     failed++;
 
                     System.out.println(
-                        "Row " + rowNumber + " failed: " + e.getMessage()
+                        "Row " + rowNumber +
+                        " failed: " + e.getMessage()
                     );
                 }
             }
@@ -96,7 +112,15 @@ public class CSVImportService {
 
         } catch (IOException e) {
 
-            System.out.println("Error reading CSV file: " + e.getMessage());
+            System.out.println(
+                "Error reading CSV file: " + e.getMessage()
+            );
+
+        } catch (RuntimeException e) {
+
+            System.out.println(
+                "CSV import could not be completed: " + e.getMessage()
+            );
         }
     }
 
@@ -113,7 +137,8 @@ public class CSVImportService {
 
             if (current == '"') {
 
-                if (insideQuotes && i + 1 < line.length()
+                if (insideQuotes
+                        && i + 1 < line.length()
                         && line.charAt(i + 1) == '"') {
 
                     currentValue.append('"');
@@ -134,7 +159,9 @@ public class CSVImportService {
         }
 
         if (insideQuotes) {
-            throw new IllegalArgumentException("Unclosed quotation mark.");
+            throw new IllegalArgumentException(
+                "Unclosed quotation mark."
+            );
         }
 
         values.add(currentValue.toString());

@@ -1,5 +1,6 @@
 
 package com.estatehub.main;
+
 import com.estatehub.exceptions.InvalidInputException;
 import com.estatehub.exceptions.InvalidPropertyException;
 import com.estatehub.exceptions.Member2ValidationException;
@@ -8,6 +9,7 @@ import com.estatehub.model.*;
 import com.estatehub.repository.*;
 import com.estatehub.service.*;
 import com.estatehub.util.EMICalculator;
+
 import java.util.List;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -18,36 +20,46 @@ public class Main {
 
     private static Scanner sc = new Scanner(System.in);
 
-  private static PropertyRepository repository =
-        new MySQLPropertyRepository();
+    private static PropertyRepository repository =
+            new MySQLPropertyRepository();
 
     private static PropertyService propertyService =
             new PropertyService(repository);
 
     private static AdminPropertyService adminPropertyService =
-        new AdminPropertyService(repository);
+            new AdminPropertyService(repository);
 
     private static AdminDashboardService dashboardService =
-        new AdminDashboardService(repository);
+            new AdminDashboardService(repository);
 
     private static PropertySearchService searchService =
             new PropertySearchService(propertyService);
 
     private static UserService userService = new UserService();
 
+    private static CustomerPropertyService customerPropertyService =
+            new CustomerPropertyService();
+
     private static InquiryService inquiryService =
-        new InquiryService(new MySQLInquiryRepository());
+            new InquiryService(new MySQLInquiryRepository());
+
     private static TourRequestService tourRequestService =
-    new TourRequestService();
+            new TourRequestService();
 
     private static AdminReportService reportService =
-        new AdminReportService(inquiryService);
+            new AdminReportService(inquiryService);
 
     private static CSVExportService csvExportService =
-        new CSVExportService(inquiryService);
+            new CSVExportService(inquiryService);
+    private static CSVImportService csvImportService =
+        new CSVImportService(propertyService);
+    private static AdminActivityLogService activityLogService =
+            new AdminActivityLogService();
+
+
     public static void main(String[] args) {
 
-        int choice;
+        int choice = -1;
 
         do {
             System.out.println("\n==============================================");
@@ -120,6 +132,7 @@ public class Main {
                 case 12:
                     adminMenu();
                     break;
+
                 case 0:
                     System.out.println("Thank you for using EstateHub!");
                     break;
@@ -130,6 +143,7 @@ public class Main {
 
         } while (choice != 0);
     }
+
 
     // ADD PROPERTY
 
@@ -201,6 +215,7 @@ public class Main {
         }
     }
 
+
     // VIEW AND DISPLAY PROPERTIES
 
     private static void displayProperties(List<Property> properties) {
@@ -221,6 +236,7 @@ public class Main {
         System.out.println("Total properties: " + properties.size());
     }
 
+
     // SEARCH BY ID
 
     private static void searchById() {
@@ -234,6 +250,29 @@ public class Main {
             System.out.println("\nProperty found:");
             System.out.println(property);
 
+            User currentUser = userService.getCurrentUser();
+
+            if (currentUser != null) {
+                try {
+                    customerPropertyService.recordViewed(
+                            currentUser.getUserId(),
+                            String.valueOf(property.getPropertyId())
+                    );
+
+                } catch (Member2ValidationException e) {
+                    System.out.println(
+                            "Could not update recently viewed: "
+                                    + e.getMessage()
+                    );
+
+                } catch (IllegalStateException e) {
+                    System.out.println(
+                            "Could not save viewing history: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
         } catch (PropertyNotFoundException e) {
             System.out.println("Error: " + e.getMessage());
 
@@ -241,6 +280,7 @@ public class Main {
             System.out.println("Invalid input: " + e.getMessage());
         }
     }
+
 
     // SEARCH BY CITY
 
@@ -252,6 +292,7 @@ public class Main {
         displayProperties(searchService.searchByCity(city));
     }
 
+
     // SEARCH BY LOCALITY
 
     private static void searchByLocality() {
@@ -262,98 +303,102 @@ public class Main {
         displayProperties(searchService.searchByLocality(locality));
     }
 
-private static void filterProperties() {
 
-    System.out.println("\n--- FILTER PROPERTIES ---");
-    System.out.println("1. Filter by Purpose");
-    System.out.println("2. Filter by Type");
-    System.out.println("3. Filter by Price Range");
-    System.out.println("4. Filter by Bedrooms");
-    System.out.println("5. Filter by Bathrooms");
-    System.out.println("6. Filter by Furnishing Status");
-    System.out.println("7. Filter by Listing Status");
+    // FILTER PROPERTIES
 
-    System.out.print("Enter choice: ");
-    int choice = readInt();
+    private static void filterProperties() {
 
-    switch (choice) {
+        System.out.println("\n--- FILTER PROPERTIES ---");
+        System.out.println("1. Filter by Purpose");
+        System.out.println("2. Filter by Type");
+        System.out.println("3. Filter by Price Range");
+        System.out.println("4. Filter by Bedrooms");
+        System.out.println("5. Filter by Bathrooms");
+        System.out.println("6. Filter by Furnishing Status");
+        System.out.println("7. Filter by Listing Status");
 
-        case 1:
-            PropertyPurpose purpose =
-                    readEnum(PropertyPurpose.class,
-                            "Enter purpose (BUY/RENT): ");
+        System.out.print("Enter choice: ");
+        int choice = readInt();
 
-            displayProperties(searchService.filterByPurpose(purpose));
-            break;
+        switch (choice) {
 
-        case 2:
-            PropertyType type =
-                    readEnum(PropertyType.class, "Enter type: ");
+            case 1:
+                PropertyPurpose purpose =
+                        readEnum(PropertyPurpose.class,
+                                "Enter purpose (BUY/RENT): ");
 
-            displayProperties(searchService.filterByType(type));
-            break;
-
-        case 3:
-            System.out.print("Enter minimum price: ");
-            double min = readDouble();
-
-            System.out.print("Enter maximum price: ");
-            double max = readDouble();
-
-            if (min < 0 || max < min) {
-                System.out.println("Invalid price range.");
+                displayProperties(searchService.filterByPurpose(purpose));
                 break;
-            }
 
-            displayProperties(searchService.filterByPrice(min, max));
-            break;
+            case 2:
+                PropertyType type =
+                        readEnum(PropertyType.class, "Enter type: ");
 
-        case 4:
-            System.out.print("Enter number of bedrooms: ");
-            int bedrooms = readInt();
-
-            if (bedrooms < 0) {
-                System.out.println("Bedrooms cannot be negative.");
+                displayProperties(searchService.filterByType(type));
                 break;
-            }
 
-            displayProperties(searchService.filterByBedrooms(bedrooms));
-            break;
+            case 3:
+                System.out.print("Enter minimum price: ");
+                double min = readDouble();
 
-        case 5:
-            System.out.print("Enter number of bathrooms: ");
-            int bathrooms = readInt();
+                System.out.print("Enter maximum price: ");
+                double max = readDouble();
 
-            if (bathrooms < 0) {
-                System.out.println("Bathrooms cannot be negative.");
+                if (min < 0 || max < min) {
+                    System.out.println("Invalid price range.");
+                    break;
+                }
+
+                displayProperties(searchService.filterByPrice(min, max));
                 break;
-            }
 
-            displayProperties(searchService.filterByBathrooms(bathrooms));
-            break;
+            case 4:
+                System.out.print("Enter number of bedrooms: ");
+                int bedrooms = readInt();
 
-        case 6:
-            FurnishingStatus furnishing =
-                    readEnum(FurnishingStatus.class,
-                            "Enter furnishing status (FURNISHED/SEMI_FURNISHED/UNFURNISHED): ");
+                if (bedrooms < 0) {
+                    System.out.println("Bedrooms cannot be negative.");
+                    break;
+                }
 
-            displayProperties(
-                    searchService.filterByFurnishingStatus(furnishing));
-            break;
+                displayProperties(searchService.filterByBedrooms(bedrooms));
+                break;
 
-        case 7:
-            ListingStatus status =
-                    readEnum(ListingStatus.class,
-                            "Enter listing status (PENDING/APPROVED/REJECTED/SOLD/RENTED): ");
+            case 5:
+                System.out.print("Enter number of bathrooms: ");
+                int bathrooms = readInt();
 
-            displayProperties(
-                    searchService.filterByListingStatus(status));
-            break;
+                if (bathrooms < 0) {
+                    System.out.println("Bathrooms cannot be negative.");
+                    break;
+                }
 
-        default:
-            System.out.println("Invalid filter choice.");
+                displayProperties(searchService.filterByBathrooms(bathrooms));
+                break;
+
+            case 6:
+                FurnishingStatus furnishing =
+                        readEnum(FurnishingStatus.class,
+                                "Enter furnishing status (FURNISHED/SEMI_FURNISHED/UNFURNISHED): ");
+
+                displayProperties(
+                        searchService.filterByFurnishingStatus(furnishing));
+                break;
+
+            case 7:
+                ListingStatus status =
+                        readEnum(ListingStatus.class,
+                                "Enter listing status (PENDING/APPROVED/REJECTED/SOLD/RENTED): ");
+
+                displayProperties(
+                        searchService.filterByListingStatus(status));
+                break;
+
+            default:
+                System.out.println("Invalid filter choice.");
+        }
     }
-}
+
 
     // SORT PROPERTIES
 
@@ -381,6 +426,7 @@ private static void filterProperties() {
         }
     }
 
+
     // DELETE PROPERTY
 
     private static void deleteProperty() {
@@ -402,6 +448,7 @@ private static void filterProperties() {
             System.out.println("Invalid input: " + e.getMessage());
         }
     }
+
 
     // UPDATE PROPERTY
 
@@ -528,6 +575,7 @@ private static void filterProperties() {
         }
     }
 
+
     // EMI CALCULATOR
 
     private static void calculateEMI() {
@@ -555,6 +603,7 @@ private static void filterProperties() {
         }
     }
 
+
     // INTEGER INPUT
 
     private static int readInt() {
@@ -569,6 +618,7 @@ private static void filterProperties() {
 
         return value;
     }
+
 
     // DECIMAL INPUT
 
@@ -591,380 +641,221 @@ private static void filterProperties() {
     }
 
 
-private static void adminMenu() {
+    // ADMIN MENU
 
-    int choice;
+    private static void adminMenu() {
 
-    do {
-        System.out.println("\n========== ADMIN MENU ==========");
-        System.out.println("1. View Pending Properties");
-        System.out.println("2. Approve Property");
-        System.out.println("3. Reject Property");
-        System.out.println("4. View Admin Dashboard");
-        System.out.println("5. View All Customer Inquiries");
-        System.out.println("6. View Inquiry Reports");
-        System.out.println("7. Export Inquiries to CSV");
-        System.out.println("0. Back to Main Menu");
+        User loggedInUser = userService.getCurrentUser();
 
-        System.out.print("Enter choice: ");
-
-        choice = readInt();
-
-        try {
-            switch (choice) {
-
-                case 1:
-                    System.out.println("\n--- PENDING PROPERTIES ---");
-
-                    if (adminPropertyService.getPendingProperties().isEmpty()) {
-                        System.out.println("No pending properties found.");
-                    } else {
-                        for (Property property :
-                                adminPropertyService.getPendingProperties()) {
-                            System.out.println(property);
-                        }
-                    }
-                    break;
-
-                case 2:
-                    System.out.print("Enter Property ID to approve: ");
-                    int approveId = readInt();
-
-                    adminPropertyService.approveProperty(approveId);
-
-                    System.out.println("Property approved successfully!");
-                    break;
-
-                case 3:
-                    System.out.print("Enter Property ID to reject: ");
-                    int rejectId = readInt();
-
-                    adminPropertyService.rejectProperty(rejectId);
-
-                    System.out.println("Property rejected successfully!");
-                    break;
-
-                case 4:
-    System.out.println("\n========== ADMIN DASHBOARD ==========");
-
-    System.out.println(
-        "Total Properties: " + dashboardService.getTotalProperties()
-    );
-
-    Map<ListingStatus, Integer> stats =
-            dashboardService.getPropertyStatistics();
-
-    for (ListingStatus status : ListingStatus.values()) {
-    System.out.println(status + " Properties: " + stats.get(status));
-}
-
-// Properties by Purpose
-System.out.println("\n--- Properties by Purpose ---");
-dashboardService.getPropertiesByPurpose().forEach(
-    (purpose, count) ->
-        System.out.println(purpose + ": " + count)
-);
-
-// Properties by City
-System.out.println("\n--- Properties by City ---");
-dashboardService.getPropertiesByCity().forEach(
-    (city, count) ->
-        System.out.println(city + ": " + count)
-);
-
-// Properties by Type
-System.out.println("\n--- Properties by Type ---");
-dashboardService.getPropertiesByType().forEach(
-    (type, count) ->
-        System.out.println(type + ": " + count)
-);
-
-break;
-
-
-    case 5:
-    System.out.println("\n========== CUSTOMER INQUIRIES ==========");
-
-    if (inquiryService.getAllInquiries().isEmpty()) {
-        System.out.println("No customer inquiries found.");
-    } else {
-        for (Inquiry inquiry : inquiryService.getAllInquiries()) {
-            System.out.println(inquiry);
-        }
-    }
-    break;
-
-
-    case 6:
-    System.out.println("\n========== INQUIRY REPORTS ==========");
-
-    System.out.println(
-        "Total Inquiries: " + reportService.getTotalInquiries()
-    );
-
-    System.out.println(
-        "Pending Inquiries: " + reportService.getPendingInquiries()
-    );
-
-    System.out.println("\n--- Inquiries by Type ---");
-    reportService.getInquiriesByType().forEach(
-        (type, count) ->
-            System.out.println(type + ": " + count)
-    );
-
-    System.out.println("\n--- Inquiries by Property ---");
-    reportService.getInquiriesByProperty().forEach(
-        (propertyId, count) ->
-            System.out.println("Property " + propertyId + ": " + count)
-    );
-
-    System.out.println("\n--- Inquiries by Status ---");
-reportService.getInquiriesByStatus().forEach(
-    (status, count) ->
-        System.out.println(status + ": " + count)
-);
-    break;
-
-    case 7:
-    System.out.println("\n========== CSV EXPORT ==========");
-
-    try {
-        String filePath = csvExportService.exportInquiries();
-
-        System.out.println("Inquiries exported successfully!");
-        System.out.println("File saved at: " + filePath);
-
-    } catch (java.io.IOException e) {
-        System.out.println("CSV export failed: " + e.getMessage());
-    }
-
-    break;
-                case 0:
-                    System.out.println("Returning to main menu...");
-                    break;
-
-                default:
-                    System.out.println("Invalid choice.");
-            }
-
-        } catch (InvalidInputException e) {
-            System.out.println("Admin operation failed: " + e.getMessage());
-
-        } catch (RuntimeException e) {
-            System.out.println("Error: " + e.getMessage());
+        if (loggedInUser == null) {
+            System.out.println("Please login before accessing Admin Management.");
+            return;
         }
 
-    } while (choice != 0);
-}
+        if (loggedInUser.getRole() != User.Role.ADMIN) {
+            System.out.println("Access denied. Admin privileges are required.");
+            return;
+        }
 
-    // USER MANAGEMENT MENU
+        int choice;
 
+        do {
+            System.out.println("\n========== ADMIN MENU ==========");
+            System.out.println("1. View Pending Properties");
+            System.out.println("2. Approve Property");
+            System.out.println("3. Reject Property");
+            System.out.println("4. View Admin Dashboard");
+            System.out.println("5. View All Customer Inquiries");
+            System.out.println("6. View Inquiry Reports");
+            System.out.println("7. Export Inquiries to CSV");
+System.out.println("8. Import Properties from CSV");
+System.out.println("9. View Admin Activity Log");
+System.out.println("0. Back to Main Menu");
 
-private static void userManagementMenu() {
+            System.out.print("Enter choice: ");
 
-    int choice;
-
-    do {
-        System.out.println("\n--- USER MANAGEMENT ---");
-        System.out.println("1. Register New User");
-        System.out.println("2. Login");
-        System.out.println("3. Update Profile");
-        System.out.println("4. Change Password");
-        System.out.println("5. Submit Property Inquiry");
-        System.out.println("6. View Inquiry History");
-        System.out.println("7. Cancel Inquiry");
-        System.out.println("8. Request Property Tour");
-        System.out.println("9. View Tour Requests");
-        System.out.println("10. Logout");
-        System.out.println("0. Back to Main Menu");
-
-        System.out.print("Enter your choice: ");
-
-        try {
-            choice = Integer.parseInt(sc.nextLine());
+            choice = readInt();
 
             try {
                 switch (choice) {
 
-                    case 1: {
-                        System.out.print("Enter name: ");
-                        String name = sc.nextLine();
+                    case 1:
+                        System.out.println("\n--- PENDING PROPERTIES ---");
 
-                        System.out.print("Enter email: ");
-                        String email = sc.nextLine();
+                        List<Property> pendingProperties =
+                                adminPropertyService.getPendingProperties();
 
-                        System.out.print("Enter phone: ");
-                        String phone = sc.nextLine();
-
-                        System.out.print("Enter password: ");
-                        String password = sc.nextLine();
-
-                        userService.register(name, email, phone, password);
-                        System.out.println("Registration successful!");
-                        break;
-                    }
-
-                    case 2: {
-                        System.out.print("Enter email: ");
-                        String email = sc.nextLine();
-
-                        System.out.print("Enter password: ");
-                        String password = sc.nextLine();
-
-                        userService.login(email, password);
-                        System.out.println("Login successful!");
-                        break;
-                    }
-
-                    case 3: {
-                        System.out.print("Enter new name: ");
-                        String name = sc.nextLine();
-
-                        System.out.print("Enter new phone: ");
-                        String phone = sc.nextLine();
-
-                        userService.updateProfile(name, phone);
-                        System.out.println("Profile updated!");
-                        break;
-                    }
-
-                    case 4: {
-                        System.out.print("Enter current password: ");
-                        String oldPassword = sc.nextLine();
-
-                        System.out.print("Enter new password: ");
-                        String newPassword = sc.nextLine();
-
-                        userService.changePassword(oldPassword, newPassword);
-                        System.out.println("Password changed!");
-                        break;
-                    }
-
-                    case 5: {
-                        User user = userService.getCurrentUser();
-
-                        if (user == null) {
-                            System.out.println("Please login first.");
-                            break;
-                        }
-
-                        System.out.print("Enter Property ID: ");
-                        String propertyId = sc.nextLine();
-
-                        System.out.print("Enter Inquiry Type: ");
-                        String type = sc.nextLine();
-
-                        System.out.print("Enter message: ");
-                        String message = sc.nextLine();
-
-                        Inquiry inquiry = inquiryService.submit(
-                                user.getUserId(), propertyId, type, message
-                        );
-
-                        System.out.println("Inquiry submitted!");
-                        System.out.println(inquiry);
-                        break;
-                    }
-
-                    case 6: {
-                        User user = userService.getCurrentUser();
-
-                        if (user == null) {
-                            System.out.println("Please login first.");
-                            break;
-                        }
-
-                        List<Inquiry> history =
-                                inquiryService.getHistory(user.getUserId());
-
-                        if (history.isEmpty()) {
-                            System.out.println("No inquiries found.");
+                        if (pendingProperties.isEmpty()) {
+                            System.out.println("No pending properties found.");
                         } else {
-                            for (Inquiry item : history) {
-                                System.out.println(item);
-                                System.out.println("--------------------");
+                            for (Property property : pendingProperties) {
+                                System.out.println(property);
                             }
                         }
                         break;
-                    }
 
-                    case 7: {
-                        User user = userService.getCurrentUser();
+                    case 2:
+                        System.out.print("Enter Property ID to approve: ");
+                        int approveId = readInt();
 
-                        if (user == null) {
-                            System.out.println("Please login first.");
-                            break;
-                        }
+                        adminPropertyService.approveProperty(approveId);
 
-                        System.out.print("Enter Inquiry ID: ");
-                        String inquiryId = sc.nextLine();
-
-                        boolean cancelled = inquiryService.cancel(
-                                user.getUserId(), inquiryId
+                        activityLogService.logActivity(
+                                loggedInUser,
+                                approveId,
+                                "APPROVE_PROPERTY",
+                                "Admin approved property ID " + approveId
                         );
 
-                        System.out.println(cancelled
-                                ? "Inquiry cancelled!"
-                                : "Inquiry could not be cancelled.");
+                        System.out.println("Property approved successfully!");
                         break;
-                    }
 
-                    case 8: {
-                        User user = userService.getCurrentUser();
+                    case 3:
+                        System.out.print("Enter Property ID to reject: ");
+                        int rejectId = readInt();
 
-                        if (user == null) {
-                            System.out.println("Please login first.");
-                            break;
-                        }
+                        adminPropertyService.rejectProperty(rejectId);
 
-                        System.out.print("Enter Property ID: ");
-                        String propertyId = sc.nextLine();
-
-                        System.out.print("Enter preferred date (YYYY-MM-DD): ");
-                        LocalDate date = LocalDate.parse(sc.nextLine());
-
-                        System.out.print("Enter additional details: ");
-                        String details = sc.nextLine();
-
-                        TourRequest tour = tourRequestService.requestTour(
-                                user.getUserId(), propertyId, date, details
+                        activityLogService.logActivity(
+                                loggedInUser,
+                                rejectId,
+                                "REJECT_PROPERTY",
+                                "Admin rejected property ID " + rejectId
                         );
 
-                        System.out.println("Tour request submitted!");
-                        System.out.println("Request ID: " + tour.getRequestId());
+                        System.out.println("Property rejected successfully!");
                         break;
-                    }
 
-                    case 9: {
-                        User user = userService.getCurrentUser();
+                    case 4:
+                        System.out.println("\n========== ADMIN DASHBOARD ==========");
 
-                        if (user == null) {
-                            System.out.println("Please login first.");
-                            break;
+                        System.out.println(
+                                "Total Properties: "
+                                        + dashboardService.getTotalProperties()
+                        );
+
+                        Map<ListingStatus, Integer> stats =
+                                dashboardService.getPropertyStatistics();
+
+                        for (ListingStatus status : ListingStatus.values()) {
+                            System.out.println(
+                                    status + " Properties: " + stats.get(status)
+                            );
                         }
 
-                        List<TourRequest> tours =
-                                tourRequestService.getRequestsForUser(
-                                        user.getUserId()
-                                );
+                        System.out.println("\n--- Properties by Purpose ---");
+                        dashboardService.getPropertiesByPurpose().forEach(
+                                (purpose, count) ->
+                                        System.out.println(purpose + ": " + count)
+                        );
 
-                        if (tours.isEmpty()) {
-                            System.out.println("No tour requests found.");
+                        System.out.println("\n--- Properties by City ---");
+                        dashboardService.getPropertiesByCity().forEach(
+                                (city, count) ->
+                                        System.out.println(city + ": " + count)
+                        );
+
+                        System.out.println("\n--- Properties by Type ---");
+                        dashboardService.getPropertiesByType().forEach(
+                                (type, count) ->
+                                        System.out.println(type + ": " + count)
+                        );
+
+                        break;
+
+                    case 5:
+                        System.out.println("\n========== CUSTOMER INQUIRIES ==========");
+
+                        List<Inquiry> allInquiries =
+                                inquiryService.getAllInquiries();
+
+                        if (allInquiries.isEmpty()) {
+                            System.out.println("No customer inquiries found.");
                         } else {
-                            for (TourRequest tour : tours) {
-                                System.out.println("Request ID: " + tour.getRequestId());
-                                System.out.println("Property ID: " + tour.getPropertyId());
-                                System.out.println("Preferred Date: " + tour.getPreferredDate());
-                                System.out.println("Details: " + tour.getDetails());
-                                System.out.println("--------------------");
+                            for (Inquiry inquiry : allInquiries) {
+                                System.out.println(inquiry);
                             }
                         }
                         break;
-                    }
 
-                    case 10:
-                        userService.logout();
-                        System.out.println("Logged out successfully.");
+                    case 6:
+                        System.out.println("\n========== INQUIRY REPORTS ==========");
+
+                        System.out.println(
+                                "Total Inquiries: "
+                                        + reportService.getTotalInquiries()
+                        );
+
+                        System.out.println(
+                                "Pending Inquiries: "
+                                        + reportService.getPendingInquiries()
+                        );
+
+                        System.out.println("\n--- Inquiries by Type ---");
+                        reportService.getInquiriesByType().forEach(
+                                (type, count) ->
+                                        System.out.println(type + ": " + count)
+                        );
+
+                        System.out.println("\n--- Inquiries by Property ---");
+                        reportService.getInquiriesByProperty().forEach(
+                                (propertyId, count) ->
+                                        System.out.println(
+                                                "Property " + propertyId + ": " + count
+                                        )
+                        );
+
+                        System.out.println("\n--- Inquiries by Status ---");
+                        reportService.getInquiriesByStatus().forEach(
+                                (status, count) ->
+                                        System.out.println(status + ": " + count)
+                        );
+                        break;
+
+                    case 7:
+                        System.out.println("\n========== CSV EXPORT ==========");
+
+                        try {
+                            String filePath = csvExportService.exportInquiries();
+
+                            System.out.println("Inquiries exported successfully!");
+                            System.out.println("File saved at: " + filePath);
+
+                        } catch (java.io.IOException e) {
+                            System.out.println("CSV export failed: " + e.getMessage());
+                        }
+
+                        break;
+
+                                        case 8:
+                        System.out.println("\n========== CSV IMPORT ==========");
+
+                        System.out.print("Enter CSV file path: ");
+                        String importFilePath = sc.nextLine().trim();
+
+                        if (importFilePath.isEmpty()) {
+                            System.out.println("File path cannot be empty.");
+                        } else {
+                            csvImportService.importProperties(importFilePath);
+                        }
+
+                        break;
+
+                    case 9:
+                        System.out.println("\n========== ADMIN ACTIVITY LOG ==========");
+
+                        List<AdminActivityLog> activities =
+                                activityLogService.getAllActivities();
+
+                        if (activities.isEmpty()) {
+                            System.out.println("No admin activities found.");
+                        } else {
+                            for (AdminActivityLog activity : activities) {
+                                System.out.println("----------------------------------");
+                                System.out.println(activity);
+                            }
+                            System.out.println("----------------------------------");
+                        }
                         break;
 
                     case 0:
@@ -975,20 +866,461 @@ private static void userManagementMenu() {
                         System.out.println("Invalid choice.");
                 }
 
+            } catch (InvalidInputException e) {
+                System.out.println("Admin operation failed: " + e.getMessage());
+
+            } catch (RuntimeException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+
+        } while (choice != 0);
+    }
+
+
+    // USER MANAGEMENT MENU
+
+    private static void userManagementMenu() {
+
+        int choice;
+
+        do {
+            System.out.println("\n--- USER MANAGEMENT ---");
+            System.out.println("1. Register New User");
+            System.out.println("2. Login");
+            System.out.println("3. Update Profile");
+            System.out.println("4. Change Password");
+            System.out.println("5. Submit Property Inquiry");
+            System.out.println("6. View Inquiry History");
+            System.out.println("7. Cancel Inquiry");
+            System.out.println("8. Request Property Tour");
+            System.out.println("9. View Tour Requests");
+            System.out.println("10. Logout");
+            System.out.println("11. Customer Property Features");
+            System.out.println("12. Register Initial Admin");
+            System.out.println("0. Back to Main Menu");
+
+            System.out.print("Enter your choice: ");
+
+            try {
+                choice = Integer.parseInt(sc.nextLine());
+
+                try {
+                    switch (choice) {
+
+                        case 1: {
+                            System.out.print("Enter name: ");
+                            String name = sc.nextLine();
+
+                            System.out.print("Enter email: ");
+                            String email = sc.nextLine();
+
+                            System.out.print("Enter phone: ");
+                            String phone = sc.nextLine();
+
+                            System.out.print("Enter password: ");
+                            String password = sc.nextLine();
+
+                            userService.register(name, email, phone, password);
+                            System.out.println("Registration successful!");
+                            break;
+                        }
+
+                        case 2: {
+                            System.out.print("Enter email: ");
+                            String email = sc.nextLine();
+
+                            System.out.print("Enter password: ");
+                            String password = sc.nextLine();
+
+                            userService.login(email, password);
+                            System.out.println("Login successful!");
+                            break;
+                        }
+
+                        case 3: {
+                            System.out.print("Enter new name: ");
+                            String name = sc.nextLine();
+
+                            System.out.print("Enter new phone: ");
+                            String phone = sc.nextLine();
+
+                            userService.updateProfile(name, phone);
+                            System.out.println("Profile updated!");
+                            break;
+                        }
+
+                        case 4: {
+                            System.out.print("Enter current password: ");
+                            String oldPassword = sc.nextLine();
+
+                            System.out.print("Enter new password: ");
+                            String newPassword = sc.nextLine();
+
+                            userService.changePassword(oldPassword, newPassword);
+                            System.out.println("Password changed!");
+                            break;
+                        }
+
+                        case 5: {
+                            User user = userService.getCurrentUser();
+
+                            if (user == null) {
+                                System.out.println("Please login first.");
+                                break;
+                            }
+
+                            System.out.print("Enter Property ID: ");
+                            String propertyId = sc.nextLine();
+
+                            System.out.print("Enter Inquiry Type: ");
+                            String type = sc.nextLine();
+
+                            System.out.print("Enter message: ");
+                            String message = sc.nextLine();
+
+                            Inquiry inquiry = inquiryService.submit(
+                                    user.getUserId(), propertyId, type, message
+                            );
+
+                            System.out.println("Inquiry submitted!");
+                            System.out.println(inquiry);
+                            break;
+                        }
+
+                        case 6: {
+                            User user = userService.getCurrentUser();
+
+                            if (user == null) {
+                                System.out.println("Please login first.");
+                                break;
+                            }
+
+                            List<Inquiry> history =
+                                    inquiryService.getHistory(user.getUserId());
+
+                            if (history.isEmpty()) {
+                                System.out.println("No inquiries found.");
+                            } else {
+                                for (Inquiry item : history) {
+                                    System.out.println(item);
+                                    System.out.println("--------------------");
+                                }
+                            }
+                            break;
+                        }
+
+                        case 7: {
+                            User user = userService.getCurrentUser();
+
+                            if (user == null) {
+                                System.out.println("Please login first.");
+                                break;
+                            }
+
+                            System.out.print("Enter Inquiry ID: ");
+                            String inquiryId = sc.nextLine();
+
+                            boolean cancelled = inquiryService.cancel(
+                                    user.getUserId(), inquiryId
+                            );
+
+                            System.out.println(cancelled
+                                    ? "Inquiry cancelled!"
+                                    : "Inquiry could not be cancelled.");
+                            break;
+                        }
+
+                        case 8: {
+                            User user = userService.getCurrentUser();
+
+                            if (user == null) {
+                                System.out.println("Please login first.");
+                                break;
+                            }
+
+                            System.out.print("Enter Property ID: ");
+                            String propertyId = sc.nextLine();
+
+                            System.out.print("Enter preferred date (YYYY-MM-DD): ");
+                            LocalDate date = LocalDate.parse(sc.nextLine());
+
+                            System.out.print("Enter additional details: ");
+                            String details = sc.nextLine();
+
+                            TourRequest tour = tourRequestService.requestTour(
+                                    user.getUserId(), propertyId, date, details
+                            );
+
+                            System.out.println("Tour request submitted!");
+                            System.out.println("Request ID: " + tour.getRequestId());
+                            break;
+                        }
+
+                        case 9: {
+                            User user = userService.getCurrentUser();
+
+                            if (user == null) {
+                                System.out.println("Please login first.");
+                                break;
+                            }
+
+                            List<TourRequest> tours =
+                                    tourRequestService.getRequestsForUser(
+                                            user.getUserId()
+                                    );
+
+                            if (tours.isEmpty()) {
+                                System.out.println("No tour requests found.");
+                            } else {
+                                for (TourRequest tour : tours) {
+                                    System.out.println("Request ID: " + tour.getRequestId());
+                                    System.out.println("Property ID: " + tour.getPropertyId());
+                                    System.out.println("Preferred Date: " + tour.getPreferredDate());
+                                    System.out.println("Details: " + tour.getDetails());
+                                    System.out.println("--------------------");
+                                }
+                            }
+                            break;
+                        }
+
+                        case 10:
+                            userService.logout();
+                            System.out.println("Logged out successfully.");
+                            break;
+
+                        case 11: {
+                            User user = userService.getCurrentUser();
+
+                            if (user == null) {
+                                System.out.println("Please login first.");
+                                break;
+                            }
+
+                            customerPropertyMenu();
+                            break;
+                        }
+
+                        case 12: {
+                            System.out.println("\n--- INITIAL ADMIN REGISTRATION ---");
+
+                            System.out.print("Enter admin setup key: ");
+                            String setupKey = sc.nextLine();
+
+                            System.out.print("Enter name: ");
+                            String name = sc.nextLine();
+
+                            System.out.print("Enter email: ");
+                            String email = sc.nextLine();
+
+                            System.out.print("Enter phone: ");
+                            String phone = sc.nextLine();
+
+                            System.out.print("Enter password: ");
+                            String password = sc.nextLine();
+
+                            User admin = userService.registerAdmin(
+                                    name, email, phone, password, setupKey
+                            );
+
+                            System.out.println("Admin account created successfully!");
+                            System.out.println("Admin ID: " + admin.getUserId());
+                            break;
+                        }
+
+                        case 0:
+                            System.out.println("Returning to main menu...");
+                            break;
+
+                        default:
+                            System.out.println("Invalid choice.");
+                    }
+
+                } catch (Member2ValidationException e) {
+                    System.out.println("Operation failed: " + e.getMessage());
+
+                } catch (DateTimeParseException e) {
+                    System.out.println("Invalid date. Use YYYY-MM-DD.");
+
+                } catch (IllegalStateException e) {
+                    System.out.println("Database operation failed: " + e.getMessage());
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number.");
+                choice = -1;
+            }
+
+        } while (choice != 0);
+    }
+
+
+    // CUSTOMER PROPERTY FEATURES MENU
+
+    private static void customerPropertyMenu() {
+
+        int choice = -1;
+
+        do {
+            System.out.println("\n--- CUSTOMER PROPERTY FEATURES ---");
+            System.out.println("1. Add Property to Favorites");
+            System.out.println("2. Remove Property from Favorites");
+            System.out.println("3. View Favorite Properties");
+            System.out.println("4. View Recently Viewed Properties");
+            System.out.println("5. Add Property to Comparison");
+            System.out.println("6. Remove Property from Comparison");
+            System.out.println("7. View Comparison Properties");
+            System.out.println("0. Back to User Management");
+
+            System.out.print("Enter your choice: ");
+
+            try {
+                choice = Integer.parseInt(sc.nextLine());
+
+                User user = userService.getCurrentUser();
+
+                if (user == null) {
+                    System.out.println("Please login first.");
+                    return;
+                }
+
+                String userId = user.getUserId();
+
+                switch (choice) {
+
+                    case 1: {
+                        System.out.print("Enter Property ID: ");
+                        String propertyId = sc.nextLine();
+
+                        boolean added = customerPropertyService.addFavorite(
+                                userId, propertyId
+                        );
+
+                        System.out.println(added
+                                ? "Property added to favorites!"
+                                : "Property is already in favorites.");
+                        break;
+                    }
+
+                    case 2: {
+                        System.out.print("Enter Property ID: ");
+                        String propertyId = sc.nextLine();
+
+                        boolean removed = customerPropertyService.removeFavorite(
+                                userId, propertyId
+                        );
+
+                        System.out.println(removed
+                                ? "Property removed from favorites."
+                                : "Property was not in favorites.");
+                        break;
+                    }
+
+                    case 3:
+                        System.out.println("\n--- FAVORITE PROPERTIES ---");
+
+                        displayCustomerProperties(
+                                customerPropertyService.getFavorites(userId)
+                        );
+                        break;
+
+                    case 4:
+                        System.out.println("\n--- RECENTLY VIEWED PROPERTIES ---");
+
+                        displayCustomerProperties(
+                                customerPropertyService.getRecentlyViewed(userId)
+                        );
+                        break;
+
+                    case 5: {
+                        System.out.print("Enter Property ID: ");
+                        String propertyId = sc.nextLine();
+
+                        boolean added = customerPropertyService.addToComparison(
+                                userId, propertyId
+                        );
+
+                        System.out.println(added
+                                ? "Property added to comparison!"
+                                : "Property is already in comparison.");
+                        break;
+                    }
+
+                    case 6: {
+                        System.out.print("Enter Property ID: ");
+                        String propertyId = sc.nextLine();
+
+                        boolean removed =
+                                customerPropertyService.removeFromComparison(
+                                        userId, propertyId
+                                );
+
+                        System.out.println(removed
+                                ? "Property removed from comparison."
+                                : "Property was not in comparison.");
+                        break;
+                    }
+
+                    case 7:
+                        System.out.println("\n--- COMPARISON PROPERTIES ---");
+
+                        displayCustomerProperties(
+                                customerPropertyService.getComparison(userId)
+                        );
+                        break;
+
+                    case 0:
+                        System.out.println("Returning to User Management...");
+                        break;
+
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid menu number.");
+                choice = -1;
+
             } catch (Member2ValidationException e) {
                 System.out.println("Operation failed: " + e.getMessage());
 
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid date. Use YYYY-MM-DD.");
+            } catch (IllegalStateException e) {
+                System.out.println(
+                        "Database operation failed: " + e.getMessage()
+                );
             }
 
-        } catch (NumberFormatException e) {
-            System.out.println("Please enter a valid number.");
-            choice = -1;
+        } while (choice != 0);
+    }
+
+
+    // DISPLAY CUSTOMER PROPERTY LISTS
+
+    private static void displayCustomerProperties(List<String> propertyIds) {
+
+        if (propertyIds == null || propertyIds.isEmpty()) {
+            System.out.println("No properties found.");
+            return;
         }
 
-    } while (choice != 0);
-}
+        for (String propertyId : propertyIds) {
+            try {
+                Property property = searchService.searchById(
+                        Integer.parseInt(propertyId)
+                );
+
+                System.out.println("----------------------------------");
+                System.out.println(property);
+
+            } catch (Exception e) {
+                System.out.println(
+                        "Could not display property ID " + propertyId
+                                + ": " + e.getMessage()
+                );
+            }
+        }
+
+        System.out.println("----------------------------------");
+    }
 
 
     // ENUM INPUT

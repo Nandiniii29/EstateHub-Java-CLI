@@ -5,7 +5,7 @@ import com.estatehub.model.Property;
 import com.estatehub.model.ListingStatus;
 import com.estatehub.repository.PropertyRepository;
 import com.estatehub.exceptions.InvalidInputException;
-import com.estatehub.exceptions.PropertyNotFoundException;
+//import com.estatehub.exceptions.PropertyNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;

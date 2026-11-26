@@ -16,7 +16,7 @@ public class MySQLPropertyRepository implements PropertyRepository {
     @Override
     public void addProperty(Property property) {
 
-        String sql = "INSERT INTO properties VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO properties (property_id, title, purpose, property_type, city, locality, property_address, price, bedrooms, bathrooms, area, furnishing_status, description, listing_status, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

@@ -10,8 +10,14 @@ public class InquiryExecutor {
     private final ExecutorService executor;
 
     public InquiryExecutor(int numberOfThreads) {
-        executor = Executors.newFixedThreadPool(numberOfThreads);
+    if (numberOfThreads <= 0) {
+        throw new IllegalArgumentException(
+            "Number of threads must be greater than zero."
+        );
     }
+
+    executor = Executors.newFixedThreadPool(numberOfThreads);
+}
 
     // Submit multiple inquiries for processing.
     public void processInquiries(String[] inquiries) {
