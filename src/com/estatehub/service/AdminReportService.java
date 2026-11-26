@@ -2,17 +2,23 @@
 package com.estatehub.service;
 
 import com.estatehub.model.Inquiry;
-import java.util.List;
+//import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AdminReportService {
 
-    private InquiryService inquiryService;
+  private final InquiryService inquiryService;
 
-    public AdminReportService(InquiryService inquiryService) {
-        this.inquiryService = inquiryService;
+public AdminReportService(InquiryService inquiryService) {
+    if (inquiryService == null) {
+        throw new IllegalArgumentException(
+            "InquiryService cannot be null."
+        );
     }
+
+    this.inquiryService = inquiryService;
+}
 
     // Total number of inquiries
     public long getTotalInquiries() {

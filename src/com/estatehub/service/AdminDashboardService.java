@@ -11,11 +11,17 @@ import java.util.stream.Collectors;
 
 public class AdminDashboardService {
 
-    private PropertyRepository repository;
+   private final PropertyRepository repository;
 
-    public AdminDashboardService(PropertyRepository repository) {
-        this.repository = repository;
+public AdminDashboardService(PropertyRepository repository) {
+    if (repository == null) {
+        throw new IllegalArgumentException(
+            "PropertyRepository cannot be null."
+        );
     }
+
+    this.repository = repository;
+}
 
     public Map<ListingStatus, Integer> getPropertyStatistics() {
 

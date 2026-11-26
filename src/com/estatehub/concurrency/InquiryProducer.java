@@ -7,8 +7,17 @@ public class InquiryProducer implements Runnable {
     private final String[] inquiries;
 
     public InquiryProducer(InquiryQueue queue, String[] inquiries) {
+
+        if (queue == null) {
+            throw new IllegalArgumentException("Queue cannot be null.");
+        }
+
+        if (inquiries == null) {
+            throw new IllegalArgumentException("Inquiries cannot be null.");
+        }
+
         this.queue = queue;
-        this.inquiries = inquiries;
+        this.inquiries = inquiries.clone();
     }
 
     @Override

@@ -3,11 +3,15 @@ package com.estatehub.concurrency;
 
 public class BackgroundTask implements Runnable {
 
-    private String taskName;
+    private final String taskName;
 
     public BackgroundTask(String taskName) {
-        this.taskName = taskName;
+    if (taskName == null || taskName.trim().isEmpty()) {
+        throw new IllegalArgumentException("Task name cannot be empty.");
     }
+
+    this.taskName = taskName;
+}
 
     @Override
     public void run() {

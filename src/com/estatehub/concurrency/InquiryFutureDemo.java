@@ -28,8 +28,17 @@ public class InquiryFutureDemo {
             System.out.println("Error processing inquiries: " + e.getMessage());
 
         } finally {
-            executor.shutdown();
+    executor.shutdown();
+
+    try {
+        if (!executor.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+            executor.shutdownNow();
         }
+    } catch (InterruptedException e) {
+        executor.shutdownNow();
+        Thread.currentThread().interrupt();
+    }
+}
 
         System.out.println("\nAll Callable tasks completed.");
     }

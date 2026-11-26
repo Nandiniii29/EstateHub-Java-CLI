@@ -6,8 +6,12 @@ public class InquiryConsumer implements Runnable {
     private final InquiryQueue queue;
 
     public InquiryConsumer(InquiryQueue queue) {
-        this.queue = queue;
+    if (queue == null) {
+        throw new IllegalArgumentException("Queue cannot be null.");
     }
+
+    this.queue = queue;
+}
 
     @Override
     public void run() {

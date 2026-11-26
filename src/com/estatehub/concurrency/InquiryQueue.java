@@ -20,7 +20,11 @@ public class InquiryQueue {
     // Producer adds an inquiry to the queue.
     public synchronized void produce(String inquiry) throws InterruptedException {
 
-        while (inquiries.size() == capacity && !closed) {
+    if (inquiry == null || inquiry.trim().isEmpty()) {
+        throw new IllegalArgumentException("Inquiry cannot be empty.");
+    }
+
+    while (inquiries.size() == capacity && !closed) {
             wait();
         }
 

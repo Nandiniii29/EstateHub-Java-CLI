@@ -15,9 +15,15 @@ public class CSVExportService {
 
     private final InquiryService inquiryService;
 
-    public CSVExportService(InquiryService inquiryService) {
-        this.inquiryService = inquiryService;
+   public CSVExportService(InquiryService inquiryService) {
+    if (inquiryService == null) {
+        throw new IllegalArgumentException(
+            "InquiryService cannot be null."
+        );
     }
+
+    this.inquiryService = inquiryService;
+}
 
     public String exportInquiries() throws IOException {
 
@@ -60,10 +66,10 @@ public class CSVExportService {
     // Handles commas, quotes and new lines in CSV values
     private String escape(String value) {
 
-        if (value == null) {
-            return "";
-        }
-
-        return "\"" + value.replace("\"", "\"\"") + "\"";
+    if (value == null) {
+        return "";
     }
+
+    return "\"" + value.replace("\"", "\"\"") + "\"";
+}
 }
